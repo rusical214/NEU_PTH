@@ -1,0 +1,2907 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ngân Hàng Trắc Nghiệm Lý Thuyết Tài Chính Tiền Tệ - NEU</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons CDN -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Logo & App Name -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-700 via-indigo-600 to-indigo-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+          <i class="ph-bold ph-graduation-cap text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">FinMoney Testbank</h1>
+            <span class="text-[10px] font-extrabold px-2 py-0.5 bg-brand-50 text-brand-700 rounded-full border border-brand-200">160+ CÂU NEU</span>
+          </div>
+          <p class="text-[11px] text-slate-500 hidden sm:block">Ôn thi chính thức: 120 Câu LT • Đề Thầy Biên • Đề Cô Nhật Linh • Giải SBT</p>
+        </div>
+      </div>
+
+      <!-- Live Counters & Controls -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Streak -->
+        <div class="flex items-center bg-amber-50 border border-amber-200 rounded-xl px-2.5 py-1 text-xs font-bold text-amber-700" title="Chuỗi câu trả lời đúng liên tiếp">
+          <i class="ph-fill ph-fire text-amber-500 text-sm mr-1"></i>
+          <span id="streakCount">0</span>
+        </div>
+
+        <!-- Accuracy -->
+        <div class="flex items-center bg-emerald-50 border border-emerald-200 rounded-xl px-2.5 py-1 text-xs font-bold text-emerald-700" title="Tỷ lệ trả lời chính xác">
+          <i class="ph-bold ph-target text-emerald-600 text-sm mr-1"></i>
+          <span id="accuracyRate">0%</span>
+        </div>
+
+        <!-- Matrix Drawer Toggle -->
+        <button id="openMatrixBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-brand-700 border border-brand-200 text-xs font-bold transition">
+          <i class="ph-bold ph-grid-four text-sm"></i>
+          <span class="hidden md:inline">Bảng câu</span>
+          <span id="matrixCounterBadge" class="bg-brand-600 text-white rounded-full px-1.5 py-0.2 text-[10px]">0/160</span>
+        </button>
+
+        <!-- Reset Button -->
+        <button id="resetDataBtn" title="Đặt lại tiến trình ôn tập" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
+          <i class="ph-bold ph-arrow-counter-clockwise text-base"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="bg-slate-100/90 border-t border-slate-200 px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto flex space-x-1 overflow-x-auto py-2 no-scrollbar text-xs font-semibold">
+        <button data-mode="all" class="mode-btn px-3 py-1.5 rounded-xl flex items-center space-x-1.5 whitespace-nowrap bg-white text-brand-700 shadow-sm border border-slate-200">
+          <i class="ph-bold ph-books"></i>
+          <span>Toàn bộ 160 câu</span>
+        </button>
+        <button data-mode="random" class="mode-btn px-3 py-1.5 rounded-xl flex items-center space-x-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-white/60">
+          <i class="ph-bold ph-shuffle"></i>
+          <span>Xáo trộn (Random)</span>
+        </button>
+        <button data-mode="mistakes" class="mode-btn px-3 py-1.5 rounded-xl flex items-center space-x-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-white/60">
+          <i class="ph-bold ph-warning-circle text-rose-500"></i>
+          <span>Luyện câu hay làm sai</span>
+          <span id="mistakeBadge" class="ml-1 px-1.5 py-0.2 bg-rose-500 text-white text-[10px] rounded-full hidden">0</span>
+        </button>
+        <button data-mode="bookmarked" class="mode-btn px-3 py-1.5 rounded-xl flex items-center space-x-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-white/60">
+          <i class="ph-fill ph-star text-amber-500"></i>
+          <span>Đã lưu sao</span>
+          <span id="bookmarkBadge" class="ml-1 px-1.5 py-0.2 bg-amber-500 text-white text-[10px] rounded-full hidden">0</span>
+        </button>
+        <button data-mode="exam" class="mode-btn px-3 py-1.5 rounded-xl flex items-center space-x-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-white/60">
+          <i class="ph-bold ph-timer text-indigo-600"></i>
+          <span>Thi thử 30 phút</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN BODY -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
+
+    <!-- TOOLBAR (FILTER & SEARCH) -->
+    <div id="filterToolbar" class="mb-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
+      <div class="flex-1 flex flex-col sm:flex-row gap-2.5">
+        <!-- Chapter Dropdown -->
+        <div class="relative min-w-[260px]">
+          <select id="chapterFilter" class="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none cursor-pointer transition">
+            <option value="all">📚 Tất cả các chương (160 câu)</option>
+            <option value="1">Chương 1: Đại cương Tiền tệ & Hệ thống thanh toán</option>
+            <option value="2">Chương 2: Hệ thống tài chính & Công cụ tài chính</option>
+            <option value="3">Chương 3: Ngân sách Nhà nước & Chính sách tài khóa</option>
+            <option value="4">Chương 4: Tài chính Doanh nghiệp</option>
+            <option value="5">Chương 5: Thị trường tài chính & Định chế tài chính</option>
+            <option value="6">Chương 6: Ngân hàng Thương mại & Tín dụng</option>
+            <option value="7">Chương 7: Lãi suất & Định giá Trái phiếu</option>
+            <option value="8">Chương 8: NHTW & Quá trình Cung ứng tiền tệ</option>
+            <option value="9">Chương 9: Lạm phát, Thất nghiệp & Quốc tế</option>
+          </select>
+          <i class="ph-bold ph-funnel absolute left-3 top-2.5 text-slate-400 text-sm pointer-events-none"></i>
+          <i class="ph-bold ph-caret-down absolute right-3 top-2.5 text-slate-400 text-xs pointer-events-none"></i>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative flex-1">
+          <input type="text" id="searchInput" placeholder="Tìm theo từ khóa (coupon, OMO, hối phiếu, dự trữ, NSNN, chiết khấu, MB, MS...)..." class="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition">
+          <i class="ph-bold ph-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+          <button id="clearSearchBtn" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">
+            <i class="ph-bold ph-x text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="text-xs font-semibold text-slate-500 self-center">
+        Hiển thị: <span id="filteredCountText" class="font-extrabold text-brand-600">0</span> câu
+      </div>
+    </div>
+
+    <!-- EXAM HEADER BANNER -->
+    <div id="examHeaderBanner" class="hidden mb-6 p-5 rounded-3xl bg-gradient-to-r from-brand-950 via-indigo-900 to-slate-900 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3.5">
+        <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
+          <i class="ph-bold ph-timer text-amber-300 text-2xl animate-pulse"></i>
+        </div>
+        <div>
+          <h2 class="font-bold text-base leading-snug">Bài Thi Thử Lý Thuyết Tài Chính Tiền Tệ</h2>
+          <p class="text-xs text-indigo-200">Đề thi ngẫu nhiên 35 câu • Thời gian 30:00 • Chuẩn ma trận NEU</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="text-center px-4 py-1.5 rounded-2xl bg-white/10 backdrop-blur border border-white/20">
+          <span class="text-[10px] uppercase font-bold text-indigo-200 block">Thời gian còn lại</span>
+          <span id="examTimer" class="font-mono text-2xl font-black text-amber-300">30:00</span>
+        </div>
+        <button id="finishExamBtn" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs shadow-lg shadow-emerald-500/30 transition">
+          Nộp Bài Thi
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN QUIZ GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- QUESTION CARD CONTAINER (Left 8 Cols) -->
+      <div class="lg:col-span-8 flex flex-col space-y-4">
+        <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 relative">
+          
+          <!-- Badges & Tools -->
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span id="questionChapterBadge" class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand-50 text-brand-700 border border-brand-200/60">
+                Chương 1
+              </span>
+              <span id="questionSourceBadge" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">
+                Nguồn câu hỏi
+              </span>
+            </div>
+
+            <!-- Star / Bookmark Button -->
+            <button id="toggleBookmarkBtn" class="flex items-center space-x-1 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-white hover:bg-amber-50 text-slate-400 hover:text-amber-500 text-xs font-semibold transition">
+              <i class="ph-bold ph-star text-sm bookmark-icon"></i>
+              <span class="hidden sm:inline">Lưu câu</span>
+            </button>
+          </div>
+
+          <!-- Question Content -->
+          <h2 id="questionText" class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed mb-6">
+            Đang tải dữ liệu câu hỏi...
+          </h2>
+
+          <!-- Options List -->
+          <div id="optionsContainer" class="flex flex-col space-y-3">
+            <!-- Dynamic Choice Buttons rendered via JS -->
+          </div>
+
+          <!-- Explanation Box -->
+          <div id="explanationBox" class="hidden mt-6 pt-6 border-t border-slate-100">
+            <div class="rounded-2xl bg-indigo-50/70 border border-indigo-100 p-4 sm:p-5">
+              <div class="flex items-center space-x-2 text-brand-900 font-bold text-xs uppercase tracking-wider mb-2">
+                <i class="ph-bold ph-lightbulb text-amber-500 text-base"></i>
+                <span>Cơ sở lý thuyết & Lời giải chi tiết</span>
+              </div>
+              <div id="explanationText" class="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-1.5">
+                <!-- Explanation text -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM CONTROLS -->
+        <div class="flex items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+          <button id="prevQuestionBtn" class="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs transition">
+            <i class="ph-bold ph-arrow-left text-sm"></i>
+            <span>Câu trước</span>
+          </button>
+
+          <div class="flex items-center space-x-2 text-xs font-semibold text-slate-500">
+            <span>Câu</span>
+            <input type="number" id="jumpInput" min="1" class="w-14 text-center py-1 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            <span>/ <span id="totalQuestionCount">0</span></span>
+          </div>
+
+          <button id="nextQuestionBtn" class="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-xs shadow-md shadow-brand-500/20 transition">
+            <span>Câu tiếp</span>
+            <i class="ph-bold ph-arrow-right text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- SIDEBAR PALETTE & STATS (Right 4 Cols) -->
+      <div class="lg:col-span-4 flex flex-col space-y-4">
+        
+        <!-- Progress Summary -->
+        <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+              <i class="ph-bold ph-chart-pie-slice text-brand-600 text-base"></i>
+              <span>Tiến độ hoàn thành</span>
+            </h3>
+            <span id="completionPercent" class="text-xs font-extrabold text-brand-600">0%</span>
+          </div>
+
+          <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-4">
+            <div id="progressBar" class="bg-gradient-to-r from-brand-600 to-emerald-400 h-full w-0 transition-all duration-300"></div>
+          </div>
+
+          <!-- Legends -->
+          <div class="grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-600 pt-2 border-t border-slate-100">
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span>Đã đúng: <strong id="legendCorrect" class="text-slate-900">0</strong></span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+              <span>Làm sai: <strong id="legendWrong" class="text-slate-900">0</strong></span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+              <span>Chưa làm: <strong id="legendUnanswered" class="text-slate-900">0</strong></span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              <span>Lưu sao: <strong id="legendStarred" class="text-slate-900">0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Matrix Box -->
+        <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Bảng điều hướng câu hỏi</span>
+            <span class="text-[11px] text-slate-400">Chạm để tới câu</span>
+          </div>
+
+          <div id="questionMatrix" class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-1.5 max-h-[380px] overflow-y-auto pr-1">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- NEU Exam Tip Note -->
+        <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/60 text-brand-900 text-xs leading-relaxed">
+          <div class="font-bold flex items-center space-x-1 mb-1">
+            <i class="ph-bold ph-info text-brand-600 text-sm"></i>
+            <span>Trọng tâm đề thi NEU:</span>
+          </div>
+          Các câu hỏi về <strong>Công cụ thị trường tiền tệ vs thị trường vốn</strong>, <strong>Phân cấp nguồn thu NSNN (100% TW hay 100% ĐP)</strong>, <strong>Bảng cân đối NHTW/NHTM</strong> và <strong>Công thức số nhân tiền m</strong> luôn chiếm 50% số điểm đề thi!
+        </div>
+      </div>
+    </div>
+
+    <!-- EXAM RESULT MODAL -->
+    <div id="examResultModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 text-center transform scale-95 transition-transform duration-200">
+        <div class="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto mb-4">
+          <i class="ph-bold ph-medal"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1">Kết Quả Bài Thi Thử</h3>
+        <p class="text-xs text-slate-500 mb-6">Môn Lý thuyết Tài chính Tiền tệ (Đại học Kinh tế Quốc dân)</p>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6">
+          <div class="text-4xl font-black text-brand-600 mb-1" id="finalScoreText">8.5 / 10</div>
+          <p class="text-xs font-semibold text-slate-600" id="finalScoreDetails">Đúng 30 trên 35 câu hỏi</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-6 text-xs">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-left">
+            <span class="text-slate-400 block mb-0.5">Thời gian thi</span>
+            <span id="examTimeSpent" class="font-bold text-slate-800">19 phút 12 giây</span>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-left">
+            <span class="text-slate-400 block mb-0.5">Xếp loại học phần</span>
+            <span id="examRankTier" class="font-bold text-emerald-600">Xuất Sắc (A+)</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button id="reviewExamBtn" class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition">
+            Xem lại bài & Lời giải
+          </button>
+          <button id="closeExamModalBtn" class="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIRM RESET MODAL -->
+    <div id="confirmResetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden">
+      <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
+        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mx-auto mb-3">
+          <i class="ph-bold ph-trash"></i>
+        </div>
+        <h4 class="font-bold text-base text-slate-900 mb-2">Đặt lại dữ liệu ôn thi?</h4>
+        <p class="text-xs text-slate-500 mb-6 leading-relaxed">
+          Thao tác này sẽ xóa toàn bộ lịch sử câu đúng, câu sai và số lượt làm bài. Danh sách câu đánh dấu sao vẫn được giữ lại.
+        </p>
+        <div class="flex space-x-2">
+          <button id="confirmResetBtn" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition">
+            Xác nhận xóa
+          </button>
+          <button id="cancelResetBtn" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+            Hủy bỏ
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    Hệ thống ôn luyện trắc nghiệm Lý thuyết Tài chính Tiền tệ • Kho dữ liệu 160 câu hỏi tổng hợp NEU
+  </footer>
+
+  <!-- JAVASCRIPT APPLICATION CORE -->
+  <script>
+    /* ==========================================================================
+       1. DATA BANK: 160 COMPREHENSIVE QUESTIONS FROM ALL 4 NEU DOCUMENTS
+       ========================================================================== */
+    const masterBank = [
+      // CHƯƠNG 1: ĐẠI CƯƠNG TIỀN TỆ & HỆ THỐNG THANH TOÁN (18 câu)
+      {
+        id: 1, ch: 1,
+        source: "120 Câu LT - Câu 5",
+        text: "Công cụ trao đổi trong thể chế tiền tệ quốc gia là:",
+        options: [
+          "Hình thức lưu thông tiền tệ của mỗi quốc gia được quy định bởi pháp luật",
+          "Các ký hiệu đơn vị tiền tệ quốc gia",
+          "Cái gì được dùng để định giá đồng tiền quốc gia",
+          "Những công cụ được sử dụng để thực hiện mua bán hoặc thanh toán các khoản nợ"
+        ],
+        correct: 3,
+        explain: "Trong thể chế tiền tệ quốc gia, công cụ trao đổi là những phương tiện cụ thể (tiền giấy, tiền xu, séc, chuyển khoản...) được pháp luật thừa nhận dùng để thực hiện thanh toán mua bán hoặc chi trả các nghĩa vụ nợ."
+      },
+      {
+        id: 2, ch: 1,
+        source: "120 Câu LT - Câu 7",
+        text: "Mọi người vẫn giữ tiền ngay cả khi các tài sản khác có khả năng sinh lời tốt hơn. Điều này được giải thích bởi tiền là:",
+        options: [
+          "Một hàng hoá độc đáo và không có sản phẩm thay thế",
+          "Luôn được đảm bảo bởi vàng",
+          "Thứ duy nhất được chấp nhận trong trao đổi kinh tế",
+          "Tài sản có tính lỏng (tính thanh khoản) cao nhất"
+        ],
+        correct: 3,
+        explain: "Tiền là tài sản có tính thanh khoản cao nhất vì nó được chấp nhận tức thời trong thanh toán mọi giao dịch mà không mất chi phí và thời gian chuyển đổi."
+      },
+      {
+        id: 3, ch: 1,
+        source: "120 Câu LT - Câu 20",
+        text: "Việc đưa ra định nghĩa về tiền tệ trở nên khó khăn hơn trong nền kinh tế hiện đại vì:",
+        options: [
+          "Ít hơn - chậm hơn",
+          "Ít hơn - nhanh hơn",
+          "Nhiều hơn – nhanh hơn (tốc độ đổi mới tài chính nhanh)",
+          "Nhiều hơn – chậm hơn"
+        ],
+        correct: 2,
+        explain: "Tốc độ đổi mới tài chính (financial innovation) diễn ra ngày càng nhanh chóng với sự xuất hiện của ví điện tử, thẻ thông minh, tiền kỹ thuật số làm ranh giới giữa tiền tệ và các tài sản tài chính thanh khoản cao trở nên mờ nhạt."
+      },
+      {
+        id: 4, ch: 1,
+        source: "120 Câu LT - Câu 30",
+        text: "Trong ba chức năng của tiền tệ, chức năng phân biệt tiền với các tài sản tài chính khác là:",
+        options: ["Đo lường giá trị", "Lưu trữ giá trị", "Tiêu chuẩn thanh toán trả chậm", "Phương tiện trao đổi"],
+        correct: 3,
+        explain: "Nhiều tài sản khác (vàng, đất đai, cổ phiếu) đều có thể cất trữ giá trị hoặc định giá, nhưng chỉ có tiền mới thực hiện được chức năng làm 'Phương tiện trao đổi' trực tiếp trong lưu thông hàng hóa dịch vụ."
+      },
+      {
+        id: 5, ch: 1,
+        source: "120 Câu LT - Câu 40",
+        text: "Nếu bạn mua vé xem phim bằng thẻ ghi nợ (debit card) của mình thì đây là ví dụ minh họa cho chức năng nào của tiền?",
+        options: ["Đo lường giá trị", "Lưu trữ giá trị", "Chuyên môn hoá", "Phương tiện trao đổi"],
+        correct: 3,
+        explain: "Việc quẹt thẻ ghi nợ chuyển tiền từ tài khoản để mua vé xem phim là việc sử dụng tiền làm phương tiện trao đổi/thanh toán."
+      },
+      {
+        id: 6, ch: 1,
+        source: "120 Câu LT - Câu 46",
+        text: "Cổ phiếu ghi danh là loại cổ phiếu:",
+        options: [
+          "Có ghi tên người sở hữu trên chứng chỉ hoặc hệ thống quản lý cổ đông",
+          "Không ghi tên người sở hữu",
+          "Được tự do trao tay không cần đăng ký",
+          "Được quyền chuyển sang cổ phiếu vô danh tự do"
+        ],
+        correct: 0,
+        explain: "Cổ phiếu ghi danh là cổ phiếu có ghi rõ họ tên người sở hữu trên sổ đăng ký cổ đông hoặc trên mặt chứng chỉ cổ phiếu."
+      },
+      {
+        id: 7, ch: 1,
+        source: "120 Câu LT - Câu 68",
+        text: "Tiền mặt trong lưu thông (Currency in circulation - C) là tiền đang được nắm giữ ở:",
+        options: [
+          "Trong két sắt ở nhà bạn hoặc trong tay các cá nhân, tổ chức phi ngân hàng",
+          "Tiền trong tài khoản thanh toán của bạn ở ngân hàng",
+          "Tiền gửi của ngân hàng thương mại tại ngân hàng trung ương",
+          "Tiền mặt nằm trong két của các ngân hàng thương mại"
+        ],
+        correct: 0,
+        explain: "Tiền trong lưu thông (C) chỉ bao gồm lượng tiền giấy và tiền xu đang nằm ngoài hệ thống ngân hàng (trong tay công chúng, doanh nghiệp phi tài chính)."
+      },
+      {
+        id: 8, ch: 1,
+        source: "120 Câu LT - Câu 87",
+        text: "Theo quan điểm của các nhà kinh tế học hiện đại, lưu thông tiền tệ là sự vận động của tiền tệ trong chức năng:",
+        options: ["Phương tiện tích trữ", "Thước đo giá trị", "Phương tiện trao đổi", "Phương tiện thanh toán quốc tế"],
+        correct: 2,
+        explain: "Các nhà kinh tế học hiện đại (như Mishkin) coi chức năng cơ bản cốt lõi nhất của tiền tệ chính là làm phương tiện trao đổi (Medium of exchange)."
+      },
+      {
+        id: 9, ch: 1,
+        source: "120 Câu LT - Câu 88",
+        text: "Điều nào sau đây là KHÔNG ĐÚNG về các đặc điểm của séc (Cheque)?",
+        options: [
+          "Séc có tính bắt buộc thanh toán",
+          "Séc có thời hạn xuất trình thanh toán theo luật định",
+          "Séc có thể chuyển nhượng bằng thủ tục ký hậu",
+          "Séc luôn có tính trừu tượng và không cần người ký phát"
+        ],
+        correct: 3,
+        explain: "Séc bắt buộc phải có chữ ký phát hành của chủ tài khoản tiền gửi thanh toán, không thể phát hành trừu tượng vô căn cứ."
+      },
+      {
+        id: 10, ch: 1,
+        source: "120 Câu LT - Câu 102",
+        text: "Trong lịch sử phát triển của quan hệ trao đổi, hình thái giá trị đã trải qua mấy giai đoạn phát triển?",
+        options: [
+          "1 giai đoạn",
+          "4 giai đoạn (Giản đơn/ngẫu nhiên -> Toàn bộ/mở rộng -> Chung -> Tiền tệ)",
+          "3 giai đoạn",
+          "2 giai đoạn"
+        ],
+        correct: 1,
+        explain: "Học thuyết Mác chỉ rõ lịch sử giá trị trải qua 4 hình thái: Hình thái giá trị giản đơn (ngẫu nhiên) -> Hình thái giá trị toàn bộ (mở rộng) -> Hình thái giá trị chung -> Hình thái tiền tệ."
+      },
+      {
+        id: 11, ch: 1,
+        source: "120 Câu LT - Câu 111",
+        text: "Khối tiền tệ (Monetary Aggregates - M1, M2, M3...) được định nghĩa là:",
+        options: [
+          "Việc quản lý các hình thức lưu thông tiền tệ",
+          "Việc phân cấp về quản lý tiền cung ứng theo thẩm quyền",
+          "Chỉ tiêu đo lường lượng tiền cung ứng được cơ quan tiền tệ sử dụng trong điều hành vĩ mô",
+          "Tổng trọng lượng các đồng tiền kim loại đúc ra"
+        ],
+        correct: 2,
+        explain: "Khối tiền tệ (M1, M2...) là các đại lượng tổng hợp phản ánh mức độ cung ứng tiền tệ theo tính thanh khoản giảm dần, dùng cho công tác theo dõi và điều hành chính sách tiền tệ."
+      },
+      {
+        id: 12, ch: 1,
+        source: "Đề Thầy Biên 2024 - Câu 4",
+        text: "Ngôi nhà mà một người đang sở hữu là một bộ phận cấu thành nên:",
+        options: ["Tiền mặt (Money)", "Nợ phải trả (Liabilities)", "Của cải (Wealth)", "Thu nhập (Income)"],
+        correct: 2,
+        explain: "Của cải (Wealth) là đại lượng thời điểm, phản ánh tổng tài sản tích lũy của một cá nhân (bao gồm nhà cửa, đất đai, cổ phiếu, tiền bạc). Thu nhập là đại lượng thời kỳ."
+      },
+      {
+        id: 13, ch: 1,
+        source: "Đề Thầy Biên 2024 - Câu 7",
+        text: "Đối với các nhà kinh tế học, tiền tệ được định nghĩa chuẩn xác là:",
+        options: [
+          "Tổng tập hợp các phần tài sản là một kho chứa giá trị",
+          "Tất cả các kim loại quý như vàng hoặc bạc",
+          "Bất kỳ thứ gì thường được chấp nhận chung trong thanh toán hàng hóa dịch vụ hoặc hoàn trả nợ",
+          "Dòng thu nhập nhận được trên một đơn vị thời gian"
+        ],
+        correct: 2,
+        explain: "Định nghĩa kinh tế học: 'Tiền là bất cứ thứ gì được chấp nhận chung trong thanh toán cho hàng hóa, dịch vụ hoặc trong việc hoàn trả các khoản nợ'."
+      },
+      {
+        id: 14, ch: 1,
+        source: "Đề Thầy Biên 2024 - Câu 18",
+        text: "Nguyên nhân căn bản và sâu xa nhất giải thích cho sự tiến hóa của các hình thái tiền tệ trong lịch sử là:",
+        options: [
+          "Các hình thức tiền tệ mới phát triển để giảm chi phí giao dịch (Transaction costs)",
+          "Tiền giấy luôn được bảo đảm bằng vàng nên được ưa chuộng hơn",
+          "Quy định bắt buộc từ phía chính phủ",
+          "Tiền hàng hóa có giá trị nội tại cao hơn nên bị loại bỏ"
+        ],
+        correct: 0,
+        explain: "Lịch sử tiền tệ phát triển từ tiền hàng hóa sang tiền kim loại, tiền giấy, séc và tiền điện tử nhằm liên tục cắt giảm chi phí giao dịch, vận chuyển, kiểm đếm và bảo quản."
+      },
+      {
+        id: 15, ch: 1,
+        source: "Đề Thầy Biên 2024 - Câu 22",
+        text: "So với nền kinh tế sử dụng tiền tệ làm phương tiện trao đổi, nền kinh tế hàng đổi hàng (Barter):",
+        options: [
+          "Có chi phí giao dịch thấp hơn",
+          "Có chi phí thanh khoản cao hơn",
+          "Có chi phí giao dịch cao hơn rất nhiều (do đòi hỏi sự trùng hợp kép về nhu cầu)",
+          "Có chi phí thanh khoản thấp hơn"
+        ],
+        correct: 2,
+        explain: "Kinh tế hàng đổi hàng đòi hỏi 'Sự trùng hợp kép về nhu cầu' (Double coincidence of wants), dẫn tới chi phí giao dịch và tìm kiếm đối tác trao đổi là cực kỳ lớn."
+      },
+      {
+        id: 16, ch: 1,
+        source: "Đề Thầy Biên 2024 - Câu 23",
+        text: "So với tiền chuyển khoản điện tử, nhược điểm lớn nhất của tiền giấy và tiền xu là:",
+        options: [
+          "Dễ bị mất cắp và chi phí vận chuyển cồng kềnh",
+          "Không phải là tài sản có tính thanh khoản cao nhất",
+          "Rất khó làm giả",
+          "Phải luôn được bảo đảm bằng dự trữ vàng"
+        ],
+        correct: 0,
+        explain: "Tiền giấy và tiền xu tiềm ẩn rủi ro vật lý lớn: dễ bị mất trộm, cướp giật, rủi ro hỏa hoạn và tốn chi phí vận chuyển kiểm đếm với khối lượng lớn."
+      },
+      {
+        id: 17, ch: 1,
+        source: "Đề Thầy Biên 2024 - Câu 27",
+        text: "Tiêu chí nào sau đây KHÔNG PHẢI là tiêu chuẩn cần thiết của một hàng hóa khi đóng vai trò làm tiền tệ?",
+        options: [
+          "Nó phải dễ chia nhỏ thành các đơn vị giá trị",
+          "Nó phải bị xuống cấp và hao mòn nhanh chóng theo thời gian",
+          "Nó phải được xã hội chấp nhận rộng rãi",
+          "Nó phải dễ dàng mang theo và bảo quản"
+        ],
+        correct: 1,
+        explain: "Tiền tệ cần có độ bền vững cao để lưu trữ được giá trị. 'Bị xuống cấp nhanh chóng' hoàn toàn mâu thuẫn với yêu cầu bảo tồn giá trị của tiền tệ."
+      },
+      {
+        id: 18, ch: 1,
+        source: "Đề Thầy Biên 2024 - Câu 36",
+        text: "Trong nền kinh tế hàng đổi hàng, nếu có 10 loại hàng hóa thì số lượng tỷ lệ giá cả trao đổi cần phải xác định là:",
+        options: ["20 mức giá", "25 mức giá", "30 mức giá", "45 mức giá"],
+        correct: 3,
+        explain: "Công thức số mức giá cần biết: P = [N * (N - 1)] / 2. Với N = 10: P = (10 * 9) / 2 = 45 mức giá."
+      },
+
+      // CHƯƠNG 2: HỆ THỐNG TÀI CHÍNH & CÔNG CỤ TÀI CHÍNH (18 câu)
+      {
+        id: 19, ch: 2,
+        source: "120 Câu LT - Câu 33",
+        text: "Hoạt động nào sau đây thuộc về kênh tài chính gián tiếp (Indirect Finance)?",
+        options: [
+          "Bạn gửi tiền tiết kiệm tại ngân hàng thương mại",
+          "Doanh nghiệp mua cổ phiếu mới phát hành bởi một công ty khác trên thị trường sơ cấp",
+          "Bạn mua tín phiếu kho bạc trực tiếp từ Kho bạc Nhà nước",
+          "Bạn cho người hàng xóm vay tiền có giấy biên nhận"
+        ],
+        correct: 0,
+        explain: "Tài chính gián tiếp là việc luân chuyển vốn thông qua các trung gian tài chính (như NHTM, công ty bảo hiểm, quỹ đầu tư). Gửi tiền vào ngân hàng là hình thức tài chính gián tiếp điển hình."
+      },
+      {
+        id: 20, ch: 2,
+        source: "120 Câu LT - Câu 60",
+        text: "Các cá nhân và hộ gia đình cần tiếp cận hệ thống tài chính chủ yếu nhằm mục đích:",
+        options: [
+          "Để cá cược sự may rủi trên thị trường",
+          "Để vay vốn phục vụ tiêu dùng hoặc sinh lời trên phần vốn dư thừa",
+          "Cá nhân nhỏ lẻ không được phép tiếp cận hệ thống tài chính",
+          "Để đạt mức sinh lời vô hạn"
+        ],
+        correct: 1,
+        explain: "Hệ thống tài chính giúp người thừa vốn (tiết kiệm) tìm kiếm kênh sinh lời an toàn và giúp người thiếu vốn tiếp cận các khoản vay để chi tiêu, mua sắm tài sản."
+      },
+      {
+        id: 21, ch: 2,
+        source: "120 Câu LT - Câu 71",
+        text: "Hoạt động tài chính gián tiếp thông qua các tổ chức tài chính trung gian được gọi là:",
+        options: ["Hoạt động trung gian tài chính", "Hoạt động phân bổ nguồn lực", "Hoạt động thu chi", "Hoạt động cấp phát ngân sách"],
+        correct: 0,
+        explain: "Hoạt động trung gian tài chính (Financial Intermediation) là quá trình các định chế trung gian nhận vốn từ người tiết kiệm và tái cấp vốn cho người có nhu cầu."
+      },
+      {
+        id: 22, ch: 2,
+        source: "120 Câu LT - Câu 80",
+        text: "Thị trường tài chính là nơi diễn ra các hoạt động:",
+        options: [
+          "Chỉ diễn ra các giao dịch tài chính gián tiếp",
+          "Diễn ra các giao dịch tài chính trực tiếp thông qua việc mua bán các công cụ tài chính",
+          "Chỉ mua bán hàng hóa tiêu dùng",
+          "Cấp phát ngân sách không hoàn lại của nhà nước"
+        ],
+        correct: 1,
+        explain: "Thị trường tài chính là nơi diễn ra hoạt động mua bán, chuyển nhượng quyền sử dụng các nguồn vốn thông qua các công cụ tài chính (cổ phiếu, trái phiếu, tín phiếu)."
+      },
+      {
+        id: 23, ch: 2,
+        source: "120 Câu LT - Câu 114",
+        text: "Hành động nào sau đây được xem là tài chính gián tiếp?",
+        options: [
+          "Bạn cho người quen vay trực tiếp 50 triệu đồng",
+          "Một công ty mua trái phiếu sơ cấp do công ty đối tác phát hành",
+          "Bạn mua chứng chỉ quỹ mở của một Quỹ tương hỗ (Mutual Fund)",
+          "Bạn đấu thầu mua tín phiếu Kho bạc Nhà nước"
+        ],
+        correct: 2,
+        explain: "Quỹ tương hỗ là một tổ chức trung gian tài chính. Mua chứng chỉ quỹ nghĩa là bạn ủy thác vốn cho quỹ này đi đầu tư chứng khoán, đây là kênh tài chính gián tiếp."
+      },
+      {
+        id: 24, ch: 2,
+        source: "Đề Thầy Biên 2024 - Câu 5",
+        text: "Chức năng cốt lõi nhất của các trung gian tài chính trong nền kinh tế là:",
+        options: [
+          "Nắm giữ rất ít tài sản của công chúng",
+          "Không tạo ra giá trị gia tăng mà tiêu hao tài nguyên",
+          "Cung cấp một kênh hiệu quả để liên kết những người tiết kiệm với những người đầu tư",
+          "Loại bỏ hoàn toàn rủi ro vỡ nợ của thị trường"
+        ],
+        correct: 2,
+        explain: "Trung gian tài chính giúp kết nối cung - cầu vốn, tận dụng lợi thế quy mô để giảm chi phí giao dịch và giải quyết vấn đề thông tin bất cân xứng."
+      },
+      {
+        id: 25, ch: 2,
+        source: "Đề Thầy Biên 2024 - Câu 21",
+        text: "Lựa chọn đối nghịch (Adverse Selection) trên thị trường cho vay phát sinh do:",
+        options: [
+          "Người đi vay thiếu các lựa chọn nguồn vốn",
+          "Người cho vay thiếu thông tin tương đối về mức độ rủi ro và lợi nhuận tiềm năng của người đi vay trước khi giao dịch",
+          "Người cho vay không yêu cầu tài sản thế chấp",
+          "Người đi vay không muốn thanh toán sau khi đã nhận tiền"
+        ],
+        correct: 1,
+        explain: "Lựa chọn đối nghịch là rủi ro nảy sinh TRƯỚC KHI ký hợp đồng: do thiếu thông tin, người cho vay dễ chọn nhầm những khách hàng có rủi ro vỡ nợ cao nhất."
+      },
+      {
+        id: 26, ch: 2,
+        source: "Đề Thầy Biên 2024 - Câu 24",
+        text: "Vấn đề do bất cân xứng thông tin nảy sinh TRƯỚC KHI giao dịch xảy ra là ......, còn vấn đề nảy sinh SAU KHI giao dịch hoàn tất là ......:",
+        options: [
+          "Lựa chọn đối nghịch; Rủi ro đạo đức",
+          "Rủi ro đạo đức; Lựa chọn đối nghịch",
+          "Chi phí giao dịch; Người đi xe miễn phí",
+          "Ủy thác sai lệch; Thao túng thị trường"
+        ],
+        correct: 0,
+        explain: "Bất cân xứng thông tin tạo ra 2 hệ quả: Trước giao dịch là Lựa chọn đối nghịch (Adverse Selection); Sau giao dịch là Rủi ro đạo đức (Moral Hazard)."
+      },
+      {
+        id: 27, ch: 2,
+        source: "LMS Cô Linh - Q38",
+        text: "Sự phá sản của một ngân hàng thương mại xảy ra bất cứ khi nào:",
+        options: [
+          "Ngân hàng không được vay tiền từ NHTW",
+          "Ngân hàng có một khoản tiền rút ra lớn",
+          "Ngân hàng có danh mục nợ cho vay quá nhiều",
+          "Ngân hàng mất khả năng thanh toán chi trả cho người gửi tiền và cạn kiệt dự trữ bắt buộc"
+        ],
+        correct: 3,
+        explain: "Phá sản ngân hàng xảy ra khi ngân hàng mất khả năng đáp ứng các nghĩa vụ chi trả tiền mặt cho người gửi tiền và không còn đủ dự trữ để duy trì theo quy định."
+      },
+      {
+        id: 28, ch: 2,
+        source: "Giải SBT - Chương 2 - Câu 3",
+        text: "Xếp theo khối lượng cung cấp vốn bình quân ra thị trường tài chính giảm dần:",
+        options: [
+          "Doanh nghiệp -> Hộ gia đình -> Chính phủ",
+          "Hộ gia đình/Cá nhân -> Doanh nghiệp -> Chính phủ -> Nước ngoài",
+          "Chính phủ -> Doanh nghiệp -> Cá nhân",
+          "NHTM -> Chính phủ -> Doanh nghiệp"
+        ],
+        correct: 1,
+        explain: "Chủ thể thặng dư vốn (cung vốn) lớn nhất trong mọi nền kinh tế luôn là khu vực Hộ gia đình/Cá nhân, tiếp theo là Doanh nghiệp tích lũy, Chính phủ và Nước ngoài."
+      },
+      {
+        id: 29, ch: 2,
+        source: "Giải SBT - Chương 2 - Câu 6",
+        text: "Đối với người nắm giữ, trái phiếu công ty là một khoản ....., còn đối với doanh nghiệp phát hành nó là một khoản .....:",
+        options: [
+          "Tài sản; Nợ phải trả",
+          "Nợ phải trả; Tài sản",
+          "Vốn chủ sở hữu; Doanh thu",
+          "Chi phí; Nguồn vốn CSH"
+        ],
+        correct: 0,
+        explain: "Trái phiếu là giấy nhận nợ: Với nhà đầu tư cho vay vốn, đây là Tài sản tài chính (Asset); Với tổ chức phát hành, đây là nghĩa vụ Nợ phải trả (Liability)."
+      },
+      {
+        id: 30, ch: 2,
+        source: "Giải SBT - Chương 2 - Câu 9",
+        text: "Đặc điểm cơ bản của công cụ vốn cổ phần (cổ phiếu thường) là:",
+        options: [
+          "Có thời hạn đáo hạn xác định từ 5 đến 10 năm",
+          "Là công cụ tài chính vô thời hạn, tồn tại cùng sự tồn tại của doanh nghiệp",
+          "Được hoàn trả tiền gốc định kỳ hàng năm",
+          "Được ưu tiên thanh toán trước trái phiếu"
+        ],
+        correct: 1,
+        explain: "Cổ phiếu không có ngày đáo hạn; vốn góp của cổ đông tồn tại vĩnh viễn cùng doanh nghiệp trừ khi công ty phá sản, thanh lý hoặc mua lại cổ phiếu quỹ."
+      },
+      {
+        id: 31, ch: 2,
+        source: "Giải SBT - Chương 2 - Câu 10",
+        text: "Các công cụ tài chính có thời hạn luân chuyển vốn dưới 1 năm được phân loại là công cụ:",
+        options: ["Ngắn hạn", "Trung hạn", "Dài hạn", "Vô hạn"],
+        correct: 0,
+        explain: "Quy ước kỳ hạn tài chính: Dưới 1 năm: Ngắn hạn; Từ 1 đến 5 năm: Trung hạn; Trên 5 năm: Dài hạn."
+      },
+      {
+        id: 32, ch: 2,
+        source: "120 Câu LT - Câu 93",
+        text: "Trong các công cụ nợ sau đây, công cụ nào có mức độ rủi ro vỡ nợ cao nhất?",
+        options: ["Tín phiếu kho bạc", "Trái phiếu chính phủ", "Chứng chỉ tiền gửi", "Các khoản vay thế chấp bất động sản"],
+        correct: 3,
+        explain: "Thứ tự rủi ro tăng dần: Tín phiếu kho bạc < Trái phiếu chính phủ < Chứng chỉ tiền gửi ngân hàng < Khoản vay thế chấp bất động sản."
+      },
+      {
+        id: 33, ch: 2,
+        source: "120 Câu LT - Câu 109",
+        text: "Tín phiếu Kho bạc Mỹ được xem là công cụ an toàn nhất trên thị trường tiền tệ vì:",
+        options: [
+          "Không có rủi ro vỡ nợ (Default-free)",
+          "Không có rủi ro lạm phát",
+          "Có lãi suất coupon cao nhất",
+          "Được bảo hiểm tiền gửi thanh toán 100%"
+        ],
+        correct: 0,
+        explain: "Tín phiếu Kho bạc Mỹ được chính phủ Hoa Kỳ bảo đảm hoàn trả vô điều kiện, chính phủ có quyền đánh thuế hoặc in tiền nên rủi ro vỡ nợ bằng 0."
+      },
+      {
+        id: 34, ch: 2,
+        source: "120 Câu LT - Câu 116",
+        text: "Mục đích quan trọng nhất của hệ thống Bảo hiểm tiền gửi (Deposit Insurance) là:",
+        options: [
+          "Tăng lợi nhuận cho các ngân hàng",
+          "Bảo vệ người gửi tiền nhỏ lẻ và ngăn chặn các cuộc rút tiền hoảng loạn hàng loạt (Bank Runs)",
+          "Bảo vệ ban giám đốc ngân hàng khỏi bị sa thải",
+          "Giúp NHTW kiểm soát lượng cung tiền"
+        ],
+        correct: 1,
+        explain: "Bảo hiểm tiền gửi tạo dựng niềm tin cho công chúng, ngăn chặn hiệu ứng tâm lý rút tiền tháo chạy hàng loạt làm sụp đổ các ngân hàng lành mạnh."
+      },
+      {
+        id: 35, ch: 2,
+        source: "Đề Thầy Biên 2024 - Câu 30",
+        text: "Một cuộc khủng hoảng tài chính (Financial Crisis) về bản chất là:",
+        options: [
+          "Sự bùng nổ của thị trường chứng khoán",
+          "Sự sụt giảm nghiêm trọng trong cung tiền",
+          "Sự sụp đổ quy mô lớn trên thị trường tài chính và các định chế tài chính",
+          "Hiện tượng kinh tế phát triển quá nóng"
+        ],
+        correct: 2,
+        explain: "Khủng hoảng tài chính là tình trạng đổ vỡ dòng vốn, mất thanh khoản hàng loạt của các ngân hàng và sụt giá nghiêm trọng của các tài sản tài chính."
+      },
+      {
+        id: 36, ch: 2,
+        source: "Đề Thầy Biên 2024 - Câu 31",
+        text: "Yếu tố nền tảng để thúc đẩy tăng trưởng kinh tế cao và bền vững là:",
+        options: [
+          "Thị trường tài chính hoạt động lành mạnh và phân bổ vốn hiệu quả",
+          "Duy trì lãi suất cho vay ở mức cực cao",
+          "Loại bỏ hoàn toàn ngoại thương",
+          "Tăng nhanh lượng tiền mặt lưu thông"
+        ],
+        correct: 0,
+        explain: "Một hệ thống tài chính hiệu quả sẽ dẫn vốn chính xác tới các dự án đầu tư có tỷ suất sinh lời cao nhất, thúc đẩy sản xuất và tăng trưởng GDP."
+      },
+
+      // CHƯƠNG 3: NGÂN SÁCH NHÀ NƯỚC & TÀI KHÓA (18 câu)
+      {
+        id: 37, ch: 3,
+        source: "120 Câu LT - Câu 13",
+        text: "Theo Luật Ngân sách Nhà nước hiện hành, khoản thu từ Thuế chuyển quyền sử dụng đất thuộc loại:",
+        options: [
+          "Khoản thu của NSĐP cấp xã hưởng 100%",
+          "Khoản thu của Ngân sách địa phương (NSĐP) được hưởng 100%",
+          "Khoản thu của Ngân sách trung ương (NSTW) được hưởng 100%",
+          "Khoản thu phân chia theo tỷ lệ % giữa NSTW và NSĐP"
+        ],
+        correct: 1,
+        explain: "Các khoản thuế gắn liền với quyền sử dụng đất, nhà ở thuộc nguồn thu ngân sách địa phương hưởng 100% để phục vụ đầu tư phát triển cơ sở hạ tầng tại chỗ."
+      },
+      {
+        id: 38, ch: 3,
+        source: "120 Câu LT - Câu 21",
+        text: "Biện pháp tài trợ cho thâm hụt Ngân sách Nhà nước dễ làm cho nền kinh tế bị lệ thuộc vào nước ngoài là:",
+        options: ["Vay nợ nước ngoài", "Phát hành thêm tiền", "Cắt giảm chi tiêu công", "Vay nợ công chúng trong nước"],
+        correct: 0,
+        explain: "Vay nợ nước ngoài làm tăng gánh nặng nợ quốc gia, chịu rủi ro tỷ giá và dễ dẫn đến các điều kiện ràng buộc kinh tế - chính trị từ các chủ nợ quốc tế."
+      },
+      {
+        id: 39, ch: 3,
+        source: "120 Câu LT - Câu 28",
+        text: "Nguồn thu NSNN phát sinh trong khâu lưu thông, phân phối bao gồm:",
+        options: [
+          "Thu từ sản xuất công nghiệp, nông nghiệp",
+          "Thu từ vay nợ và viện trợ quốc tế",
+          "Thu từ lĩnh vực kinh doanh thương mại, dịch vụ vận tải, tài chính ngân hàng",
+          "Thu từ y tế, giáo dục đào tạo"
+        ],
+        correct: 2,
+        explain: "Khâu lưu thông phân phối bao gồm các hoạt động thương mại, trao đổi dịch vụ, trung gian tài chính và lưu thông hàng hóa."
+      },
+      {
+        id: 40, ch: 3,
+        source: "120 Câu LT - Câu 34",
+        text: "Tác động của thâm hụt Ngân sách Nhà nước (NSNN) đến lạm phát là:",
+        options: [
+          "Tỷ lệ lạm phát có thể tăng (nếu tài trợ bằng in tiền)",
+          "Tỷ lệ lạm phát chắc chắn giảm",
+          "Tỷ lệ lạm phát không bao giờ đổi",
+          "Lạm phát chắc chắn biến thành giảm phát"
+        ],
+        correct: 0,
+        explain: "Nếu Chính phủ bù đắp thâm hụt bằng cách yêu cầu NHTW in tiền phát hành, cung tiền tăng vọt sẽ gây lạm phát. Nếu tài trợ bằng vay nợ công chúng thì không trực tiếp làm tăng lượng tiền cung ứng."
+      },
+      {
+        id: 41, ch: 3,
+        source: "120 Câu LT - Câu 41",
+        text: "Khoản chi gói an sinh xã hội trợ cấp hỗ trợ người dân bị ảnh hưởng bởi thiên tai, dịch bệnh thuộc về:",
+        options: [
+          "Nhiệm vụ chi Đầu tư phát triển của NSTW",
+          "Nhiệm vụ chi Đầu tư phát triển của NSĐP",
+          "Nhiệm vụ chi thường xuyên của NSĐP",
+          "Nhiệm vụ chi thường xuyên của Ngân sách Nhà nước"
+        ],
+        correct: 3,
+        explain: "Các khoản trợ cấp an sinh xã hội, bảo trợ đời sống nhân dân thuộc các khoản Chi thường xuyên của NSNN."
+      },
+      {
+        id: 42, ch: 3,
+        source: "120 Câu LT - Câu 56",
+        text: "Phân cấp Ngân sách Nhà nước bao gồm việc giải quyết 3 nhóm quan hệ cơ bản là:",
+        options: [
+          "Quan hệ chính sách; Quan hệ phân chia nhiệm vụ thu chi; Quan hệ vay nợ",
+          "Quan hệ chế độ chính sách; Quan hệ vật chất (thu chi); Quan hệ chu trình ngân sách (quản lý)",
+          "Quan hệ chu trình ngân sách; Quan hệ vật chất; Quan hệ kiểm toán",
+          "Quan hệ trung ương; Quan hệ địa phương; Quan hệ xã hội"
+        ],
+        correct: 1,
+        explain: "Theo Giáo trình LTTCTT: Phân cấp NSNN giải quyết 3 mối quan hệ: 1. Quan hệ về chế độ chính sách; 2. Quan hệ vật chất (nguồn thu - nhiệm vụ chi); 3. Quan hệ chu trình quản lý ngân sách."
+      },
+      {
+        id: 43, ch: 3,
+        source: "120 Câu LT - Câu 58",
+        text: "Khoản chi xây dựng kết cấu hạ tầng giao thông huyết mạch, đê điều hồ đập thủy lợi do cơ quan cấp Trung ương quản lý thuộc loại:",
+        options: [
+          "Nhiệm vụ chi thường xuyên của NSĐP",
+          "Nhiệm vụ chi Đầu tư phát triển của Ngân sách Trung ương",
+          "Nhiệm vụ chi thường xuyên của NSTW",
+          "Nhiệm vụ chi viện trợ phát triển"
+        ],
+        correct: 1,
+        explain: "Chi xây dựng mới, nâng cấp hạ tầng kinh tế xã hội không có khả năng thu hồi vốn do bộ ngành TW quản lý là khoản Chi đầu tư phát triển của Ngân sách Trung ương."
+      },
+      {
+        id: 44, ch: 3,
+        source: "120 Câu LT - Câu 62",
+        text: "Mệnh đề nào dưới đây là ĐÚNG về Ngân sách Nhà nước?",
+        options: [
+          "Thuế không phải là nguồn thu quan trọng nhất của ngân sách",
+          "Phát hành tiền là giải pháp tốt nhất để tài trợ thâm hụt ngân sách",
+          "Năm ngân sách của tất cả các quốc gia trên thế giới đều bắt đầu vào 01/01",
+          "Thuế, phí, lệ phí là các khoản thu nằm trong cân đối của NSNN"
+        ],
+        correct: 3,
+        explain: "Thuế, phí, lệ phí là nguồn thu trong cân đối. Thu ngoài cân đối là các khoản đi vay nợ trong nước và quốc tế để bù đắp bội chi."
+      },
+      {
+        id: 45, ch: 3,
+        source: "120 Câu LT - Câu 75",
+        text: "Nếu các yếu tố khác không đổi, việc Chính phủ phát hành khối lượng lớn trái phiếu để bù đắp thâm hụt ngân sách sẽ làm:",
+        options: [
+          "Lãi suất thị trường tăng (do làm tăng cầu vốn vay)",
+          "Chi tiêu dùng của ngân sách tăng",
+          "Lạm phát tăng ngay lập tức",
+          "Cán cân thương mại thặng dư"
+        ],
+        correct: 0,
+        explain: "Chính phủ gia tăng vay nợ thông qua phát hành trái phiếu làm đường cầu vốn vay dịch chuyển sang phải (tăng cầu vốn vay) -> đẩy lãi suất thị trường tăng lên."
+      },
+      {
+        id: 46, ch: 3,
+        source: "120 Câu LT - Câu 81",
+        text: "Chính sách tài khóa được điều hành thông qua hai công cụ cơ bản là:",
+        options: [
+          "Thuế và Nghiệp vụ thị trường mở",
+          "Lãi suất chiết khấu và Dự trữ bắt buộc",
+          "Chi tiêu chính phủ và Thuế khóa",
+          "Tỷ giá hối đoái và Hạn mức tín dụng"
+        ],
+        correct: 2,
+        explain: "Chính sách tài khóa tác động tới tổng cầu thông qua 2 biến số của ngân sách: Chi tiêu của chính phủ (G) và Thuế khóa (T)."
+      },
+      {
+        id: 47, ch: 3,
+        source: "120 Câu LT - Câu 94",
+        text: "Giả sử các yếu tố khác không đổi, thâm hụt Ngân sách Nhà nước tăng khiến cho:",
+        options: [
+          "Cầu vốn vay tăng và đường cầu vốn vay dịch chuyển sang phải",
+          "Cầu vốn vay giảm và đường cầu vốn vay dịch chuyển sang phải",
+          "Cầu vốn vay tăng và đường cầu vốn vay dịch chuyển sang trái",
+          "Cung vốn vay tăng mạnh"
+        ],
+        correct: 0,
+        explain: "Thâm hụt tăng buộc chính phủ phải vay thêm vốn trên thị trường tài chính, làm tăng nhu cầu vốn vay -> đường cầu vốn dịch chuyển sang phải."
+      },
+      {
+        id: 48, ch: 3,
+        source: "120 Câu LT - Câu 95",
+        text: "Chi tiêu của Ngân sách Nhà nước để góp vốn vào các doanh nghiệp cổ phần nhà nước thuộc loại chi nào?",
+        options: ["Chi thường xuyên", "Chi đầu tư phát triển", "Chi văn hóa xã hội", "Chi quốc phòng an ninh"],
+        correct: 1,
+        explain: "Chi góp vốn cổ phần, hỗ trợ vốn cho doanh nghiệp nhà nước nhằm mục đích tích lũy tài sản quốc gia, do đó thuộc Chi đầu tư phát triển."
+      },
+      {
+        id: 49, ch: 3,
+        source: "120 Câu LT - Câu 100",
+        text: "Hệ thống Kho bạc Nhà nước Việt Nam được tổ chức tới cấp thấp nhất là cấp:",
+        options: ["KBNN Tỉnh, Thành phố", "KBNN Quận, Huyện, Thị xã", "KBNN Xã, Phường", "KBNN Trung ương"],
+        correct: 1,
+        explain: "Hệ thống Kho bạc Nhà nước quản lý theo hệ thống dọc 3 cấp: TW -> Tỉnh/TP -> Quận/Huyện. Còn hệ thống chính quyền Ngân sách Nhà nước được tổ chức tới cấp Xã/Phường."
+      },
+      {
+        id: 50, ch: 3,
+        source: "120 Câu LT - Câu 104",
+        text: "Khoản thu từ Thuế sử dụng đất nông nghiệp theo quy định của Luật NSNN thuộc về:",
+        options: [
+          "Khoản thu của Ngân sách địa phương được hưởng 100%",
+          "Khoản thu của Ngân sách trung ương được hưởng 100%",
+          "Khoản thu phân chia theo tỷ lệ phần trăm giữa NSTW và NSĐP",
+          "Khoản thu dành riêng cho các quỹ từ thiện"
+        ],
+        correct: 0,
+        explain: "Thuế sử dụng đất nông nghiệp là nguồn thu điều tiết phân cấp cho ngân sách địa phương hưởng trọn vẹn 100%."
+      },
+      {
+        id: 51, ch: 3,
+        source: "120 Câu LT - Câu 110",
+        text: "Khoản thu từ Thuế thu nhập doanh nghiệp của các đơn vị hạch toán toàn ngành (như Hàng không, Đường sắt) là:",
+        options: [
+          "Khoản thu phân chia theo tỷ lệ phần trăm giữa NSTW và NSĐP",
+          "Khoản thu của NSĐP cấp huyện hưởng 100%",
+          "Khoản thu của Ngân sách Trung ương (NSTW) được hưởng 100%",
+          "Khoản thu của NSĐP cấp tỉnh hưởng 100%"
+        ],
+        correct: 2,
+        explain: "Thuế TNDN của các doanh nghiệp hạch toán toàn ngành tập trung nộp 100% về Ngân sách Trung ương (NSTW)."
+      },
+      {
+        id: 52, ch: 3,
+        source: "Đề Thầy Biên 2024 - Câu 39",
+        text: "Thâm hụt Ngân sách Nhà nước kéo dài là mối lo ngại vĩ mô lớn vì cuối cùng nó có thể:",
+        options: [
+          "Dẫn đến giá trái phiếu cao hơn",
+          "Dẫn đến lãi suất cho vay giảm mạnh",
+          "Dẫn đến nguy cơ lạm phát cao (do áp lực tài trợ bằng cung tiền)",
+          "Làm cho tốc độ tăng trưởng cung tiền chậm lại"
+        ],
+        correct: 2,
+        explain: "Thâm hụt kinh niên làm nợ công tăng vọt, nếu nhà nước không còn khả năng vay nợ công chúng sẽ buộc phải monetizing the debt (in tiền tài trợ), gây ra siêu lạm phát."
+      },
+      {
+        id: 53, ch: 3,
+        source: "Giải SBT - Chương 3 - Câu 14",
+        text: "Chính sách tài khóa được hiểu chuẩn xác nhất là:",
+        options: [
+          "Chính sách tiền tệ mở rộng của ngân hàng nhà nước",
+          "Chính sách kinh tế vĩ mô thông qua các công cụ Thu và Chi Ngân sách Nhà nước",
+          "Chính sách tỷ giá hối đoái",
+          "Chính sách điều tiết lãi suất liên ngân hàng"
+        ],
+        correct: 1,
+        explain: "Chính sách tài khóa (Fiscal policy) là hệ thống các quyết định và biện pháp của Chính phủ về quy mô và cơ cấu Thu - Chi NSNN để đạt các mục tiêu kinh tế vĩ mô."
+      },
+      {
+        id: 54, ch: 3,
+        source: "Giải SBT - Chương 3 - Câu 19",
+        text: "Thời điểm bắt đầu và kết thúc Năm ngân sách ở Việt Nam theo luật định là:",
+        options: [
+          "Từ 01/10 năm nay đến 30/09 năm sau",
+          "Từ 01/01 đến 31/12 cùng năm dương lịch",
+          "Từ 01/04 năm nay đến 31/03 năm sau",
+          "Tùy theo quyết định của Bộ Tài chính từng năm"
+        ],
+        correct: 1,
+        explain: "Luật NSNN Việt Nam quy định năm ngân sách bắt đầu từ ngày 01 tháng 01 và kết thúc vào ngày 31 tháng 12 năm dương lịch."
+      },
+
+      // CHƯƠNG 4: TÀI CHÍNH DOANH NGHIỆP (16 câu)
+      {
+        id: 55, ch: 4,
+        source: "120 Câu LT - Câu 25",
+        text: "Sự khác nhau căn bản nhất giữa vốn lưu động và vốn cố định của doanh nghiệp là:",
+        options: [
+          "Quy mô và hình thức tồn tại",
+          "Đặc điểm luân chuyển, vai trò và hình thức tồn tại",
+          "Vai trò và thời gian khấu hao",
+          "Nguồn gốc huy động vốn"
+        ],
+        correct: 1,
+        explain: "Vốn cố định chu chuyển dần dần từng phần vào giá trị sản phẩm qua nhiều chu kỳ sản xuất; Vốn lưu động luân chuyển toàn bộ giá trị một lần trong một chu kỳ kinh doanh."
+      },
+      {
+        id: 56, ch: 4,
+        source: "120 Câu LT - Câu 26",
+        text: "Hoạt động 'Tối đa hóa lợi nhuận cho chủ sở hữu vốn' là mục tiêu của:",
+        options: [
+          "Bản chất khách quan của phạm trù tài chính",
+          "Quản trị tài chính doanh nghiệp",
+          "Chính sách tiền tệ quốc gia",
+          "Ngân sách Nhà nước"
+        ],
+        correct: 1,
+        explain: "Tối đa hóa giá trị doanh nghiệp / lợi nhuận của chủ sở hữu là mục tiêu cốt lõi của môn Quản trị tài chính doanh nghiệp."
+      },
+      {
+        id: 57, ch: 4,
+        source: "120 Câu LT - Câu 44",
+        text: "Đặc điểm nào sau đây KHÔNG THUỘC VỀ công ty trách nhiệm hữu hạn (TNHH)?",
+        options: [
+          "Phần vốn góp của thành viên được quy định trong điều lệ",
+          "Chịu trách nhiệm hữu hạn trên phạm vi phần vốn cam kết góp",
+          "Công ty được phép phát hành cổ phiếu công khai",
+          "Không được phát hành cổ phiếu để huy động vốn"
+        ],
+        correct: 2,
+        explain: "Theo luật Doanh nghiệp, công ty TNHH không có tư cách phát hành cổ phiếu ra công chúng; quyền phát hành cổ phiếu thuộc đặc quyền của Công ty Cổ phần."
+      },
+      {
+        id: 58, ch: 4,
+        source: "120 Câu LT - Câu 45",
+        text: "Khoản mục nào sau đây KHÔNG THUỘC Nợ phải trả trên Bảng cân đối của doanh nghiệp?",
+        options: [
+          "Nợ thuế và các khoản phải nộp Nhà nước",
+          "Quỹ đầu tư xây dựng cơ bản / đầu tư phát triển",
+          "Phải trả người bán",
+          "Các khoản vay ngắn hạn ngân hàng"
+        ],
+        correct: 1,
+        explain: "Quỹ đầu tư phát triển hoặc quỹ XDCB hình thành từ lợi nhuận chưa phân phối, do đó nằm ở phần Vốn chủ sở hữu (Equity)."
+      },
+      {
+        id: 59, ch: 4,
+        source: "120 Câu LT - Câu 65",
+        text: "Mục tiêu tài chính phù hợp và toàn diện nhất đối với nhà quản trị tài chính của một công ty cổ phần là:",
+        options: [
+          "Tối đa hoá giá trị thị trường của cổ phiếu công ty",
+          "Tối thiểu hoá các khoản nợ của công ty",
+          "Tối đa hoá doanh thu bán hàng",
+          "Tối đa hoá thị phần ngắn hạn"
+        ],
+        correct: 0,
+        explain: "Mục tiêu tối đa hóa giá trị thị trường của cổ phiếu phản ánh tổng hợp hiệu quả kinh doanh, triển vọng sinh lời và mức độ kiểm soát rủi ro của doanh nghiệp trong dài hạn."
+      },
+      {
+        id: 60, ch: 4,
+        source: "120 Câu LT - Câu 77",
+        text: "Tài chính doanh nghiệp về bản chất là:",
+        options: [
+          "Hoạt động sản xuất gia công sản phẩm",
+          "Các quan hệ kinh tế dưới hình thái giá trị gắn liền với việc tạo lập và sử dụng các quỹ tiền tệ trong hoạt động sản xuất kinh doanh",
+          "Nghiệp vụ kế toán ghi chép sổ sách thu chi tiền mặt",
+          "Nghiệp vụ đi vay ngân hàng thương mại"
+        ],
+        correct: 1,
+        explain: "Tài chính doanh nghiệp là hệ thống các quan hệ kinh tế phát sinh trong quá trình phân phối các nguồn lực tài chính gắn với quá trình kinh doanh của doanh nghiệp."
+      },
+      {
+        id: 61, ch: 4,
+        source: "120 Câu LT - Câu 86",
+        text: "Vai trò cơ bản nhất của Vốn đối với doanh nghiệp là:",
+        options: [
+          "Điều kiện để doanh nghiệp ra đời và chiếm lợi thế cạnh tranh",
+          "Điều kiện tiền đề, đảm bảo sự tồn tại, ổn định và phát triển bền vững của doanh nghiệp",
+          "Phương tiện duy nhất để mua hàng trả góp",
+          "Giúp giảm tối đa thuế thu nhập doanh nghiệp"
+        ],
+        correct: 1,
+        explain: "Không có vốn thì doanh nghiệp không thể mua sắm máy móc trang thiết bị, thuê nhân công và vận hành chu kỳ sản xuất kinh doanh."
+      },
+      {
+        id: 62, ch: 4,
+        source: "120 Câu LT - Câu 90",
+        text: "Khi doanh nghiệp phát hành thêm trái phiếu dài hạn, hành động này sẽ làm giảm nguồn vốn nào sau đây?",
+        options: ["Vốn huy động ngắn hạn", "Vốn cổ phần", "Không làm giảm nguồn vốn nào cả (làm tăng vốn nợ)", "Vốn lưu động"],
+        correct: 2,
+        explain: "Phát hành trái phiếu làm Tăng Nợ phải trả (vốn nợ) và làm Tăng tổng nguồn vốn của doanh nghiệp, không làm giảm nguồn vốn nào."
+      },
+      {
+        id: 63, ch: 4,
+        source: "120 Câu LT - Câu 92",
+        text: "Khi cổ phiếu của một doanh nghiệp tiếp tục được mua đi bán lại trên thị trường cấp hai (thị trường thứ cấp):",
+        options: [
+          "Vốn chủ sở hữu của doanh nghiệp không thay đổi",
+          "Vốn vay của doanh nghiệp giảm",
+          "Vốn chủ sở hữu của doanh nghiệp tăng",
+          "Doanh nghiệp thu thêm được một khoản tiền bán cổ phiếu"
+        ],
+        correct: 0,
+        explain: "Giao dịch trên thị trường thứ cấp chỉ luân chuyển quyền sở hữu cổ phần giữa các nhà đầu tư với nhau, tiền chảy vào túi người bán chứ không chảy vào doanh nghiệp, vốn CSH không đổi."
+      },
+      {
+        id: 64, ch: 4,
+        source: "120 Câu LT - Câu 107",
+        text: "Khoản mục nào sau đây KHÔNG ĐƯỢC XẾP VÀO doanh thu hoạt động tài chính của doanh nghiệp?",
+        options: [
+          "Tiết kiệm từ lá chắn thuế của lãi vay (Tax shield)",
+          "Chênh lệch lãi chuyển nhượng vốn đầu tư",
+          "Cổ tức và lợi nhuận được chia",
+          "Tiền lãi gửi ngân hàng"
+        ],
+        correct: 0,
+        explain: "Lá chắn thuế là khoản tiết kiệm chi phí thuế gián tiếp phát sinh từ chi phí lãi vay, đây không phải là một khoản doanh thu ghi nhận trong báo cáo kết quả kinh doanh."
+      },
+      {
+        id: 65, ch: 4,
+        source: "Đề Thầy Biên 2024 - Câu 6",
+        text: "Giả sử bạn vay 2.000 USD với lãi suất 10%/năm để tài trợ cho một dự án mới. Để dự án này sinh lời, số tiền tối thiểu mà dự án phải tạo ra trong thu nhập hàng năm là:",
+        options: ["201 đô la", "200 đô la", "199 đô la", "400 đô la"],
+        correct: 0,
+        explain: "Chi phí lãi vay = 2.000 * 10% = 200 USD. Để có lãi (Lợi nhuận = Thu nhập - Chi phí > 0), thu nhập tối thiểu phải là 201 USD."
+      },
+      {
+        id: 66, ch: 4,
+        source: "Đề Thầy Biên 2024 - Câu 25",
+        text: "Mặt bằng lãi suất cho vay trên thị trường tăng cao có thể khiến một doanh nghiệp phải quyết định:",
+        options: [
+          "Hoãn lại kế hoạch xây dựng nhà máy mới",
+          "Hoàn thành kế hoạch mở rộng nhanh hơn",
+          "Tăng chia cổ tức bằng tiền mặt",
+          "Tăng vay nợ ngắn hạn"
+        ],
+        correct: 0,
+        explain: "Lãi suất cao làm tăng chi phí vốn vay (Cost of capital), khiến giá trị hiện tại ròng (NPV) của các dự án mở rộng bị sụt giảm, buộc doanh nghiệp phải hoãn lại các dự án đầu tư mở rộng."
+      },
+      {
+        id: 67, ch: 4,
+        source: "Đề Thầy Biên 2024 - Câu 37",
+        text: "Chủ sở hữu cổ phần (cổ đông thường) là người đòi nợ cuối cùng (Residual claimant). Điều đó có nghĩa là:",
+        options: [
+          "Doanh nghiệp phải thanh toán đầy đủ các khoản nợ trước khi phân chia tài sản cho cổ đông khi giải thể",
+          "Cổ đông được ưu tiên thanh toán trước các chủ nợ",
+          "Cổ đông được bảo hiểm tiền vốn vô điều kiện",
+          "Doanh nghiệp không có nghĩa vụ trả nợ ngân hàng"
+        ],
+        correct: 0,
+        explain: "Khi doanh nghiệp thanh lý giải thể, tài sản được ưu tiên thanh toán thuế, lương nhân viên, nợ ngân hàng, nợ trái phiếu... Cổ đông thường là người nhận phần giá trị còn lại cuối cùng."
+      },
+      {
+        id: 68, ch: 4,
+        source: "Giải SBT - Chương 4 - Câu 1",
+        text: "Trái phiếu chuyển đổi (Convertible Bond) là loại chứng khoán:",
+        options: [
+          "Chứng khoán nợ thuần túy",
+          "Chứng khoán lai (Hybrid) cho phép chuyển đổi thành cổ phiếu thường theo tỷ lệ định trước",
+          "Chứng khoán vốn không có lãi suất",
+          "Trái phiếu không có kỳ hạn"
+        ],
+        correct: 1,
+        explain: "Trái phiếu chuyển đổi vừa mang tính chất của chứng khoán nợ (hưởng lãi định kỳ) vừa mang tính chất chứng khoán vốn (có quyền chuyển đổi thành cổ phiếu)."
+      },
+      {
+        id: 69, ch: 4,
+        source: "Giải SBT - Chương 4 - Câu 8",
+        text: "Khi một công ty cổ phần tiến hành mua lại cổ phiếu của chính mình trên sàn chứng khoán làm Cổ phiếu quỹ:",
+        options: [
+          "Vốn chủ sở hữu của doanh nghiệp sẽ bị ghi giảm",
+          "Vốn chủ sở hữu của doanh nghiệp sẽ tăng lên",
+          "Nợ phải trả của doanh nghiệp sẽ tăng lên",
+          "Tổng tài sản của doanh nghiệp không thay đổi"
+        ],
+        correct: 0,
+        explain: "Mua cổ phiếu quỹ đòi hỏi doanh nghiệp xuất tiền mặt chi trả (Tài sản giảm) và hạch toán giảm Vốn chủ sở hữu (Equity giảm)."
+      },
+      {
+        id: 70, ch: 4,
+        source: "Giải SBT - Chương 4 - Câu 38",
+        text: "Thứ tự rủi ro tăng dần đối với nhà đầu tư khi nắm giữ các chứng khoán của cùng một doanh nghiệp phát hành là:",
+        options: [
+          "Trái phiếu -> Cổ phiếu ưu đãi -> Cổ phiếu thường",
+          "Cổ phiếu thường -> Cổ phiếu ưu đãi -> Trái phiếu",
+          "Cổ phiếu ưu đãi -> Trái phiếu -> Cổ phiếu thường",
+          "Trái phiếu -> Cổ phiếu thường -> Cổ phiếu ưu đãi"
+        ],
+        correct: 0,
+        explain: "Trái phiếu an toàn nhất (hưởng lãi cố định, ưu tiên đòi nợ trước) -> Cổ phiếu ưu đãi (cổ tức cố định, ưu tiên trước cổ đông thường) -> Cổ phiếu thường rủi ro nhất (nhận sau cùng)."
+      },
+
+      // CHƯƠNG 5: THỊ TRƯỜNG TÀI CHÍNH & ĐỊNH CHẾ TÀI CHÍNH (18 câu)
+      {
+        id: 71, ch: 5,
+        source: "120 Câu LT - Câu 1",
+        text: "Một trái phiếu có tỷ suất coupon bằng với lãi suất trên thị trường sẽ được bán với giá:",
+        options: ["Cao hơn mệnh giá", "Thấp hơn mệnh giá", "Bằng đúng mệnh giá", "Không xác định được giá"],
+        correct: 2,
+        explain: "Khi lãi suất coupon = lãi suất hoàn vốn thị trường, giá thị trường của trái phiếu bằng đúng mệnh giá (At par)."
+      },
+      {
+        id: 72, ch: 5,
+        source: "120 Câu LT - Câu 2",
+        text: "Sản phẩm nào sau đây KHÔNG ĐƯỢC giao dịch trên thị trường vốn?",
+        options: ["Trái phiếu chính phủ", "Cổ phiếu công ty Vinamilk", "Trái phiếu doanh nghiệp", "Thương phiếu"],
+        correct: 3,
+        explain: "Thương phiếu là công cụ nợ ngắn hạn (dưới 1 năm), được giao dịch độc quyền trên Thị trường tiền tệ."
+      },
+      {
+        id: 73, ch: 5,
+        source: "120 Câu LT - Câu 3",
+        text: "Dựa vào tính chất của công cụ tài chính, thị trường tài chính được chia thành:",
+        options: [
+          "Sở giao dịch và thị trường OTC",
+          "Thị trường sơ cấp và thị trường thứ cấp",
+          "Thị trường tiền tệ và thị trường vốn",
+          "Thị trường nợ và thị trường vốn cổ phần"
+        ],
+        correct: 3,
+        explain: "Dựa vào tính chất công cụ (hoặc phương thức huy động vốn): chia thành Thị trường nợ (Debt Market) và Thị trường vốn cổ phần (Equity Market)."
+      },
+      {
+        id: 74, ch: 5,
+        source: "120 Câu LT - Câu 22",
+        text: "Trái phiếu có thể chuyển đổi là công cụ tài chính được giao dịch trên:",
+        options: ["Thị trường tiền tệ", "Thị trường vốn", "Thị trường hối đoái", "Thị trường liên ngân hàng"],
+        correct: 1,
+        explain: "Trái phiếu chuyển đổi có kỳ hạn dài hạn (thường từ 3 - 5 năm trở lên), do đó được mua bán trên thị trường vốn."
+      },
+      {
+        id: 75, ch: 5,
+        source: "120 Câu LT - Câu 23",
+        text: "Mệnh đề nào sau đây là ĐÚNG khi nói về cổ phiếu ưu đãi cổ tức?",
+        options: [
+          "Thị giá cổ phiếu ưu đãi dao động mạnh hơn cổ phiếu thường",
+          "Cổ đông ưu đãi có quyền biểu quyết bầu hội đồng quản trị",
+          "Người nắm giữ cổ phiếu ưu đãi có thứ tự thanh toán sau cổ đông thường",
+          "Cổ phiếu ưu đãi được biết trước mức cổ tức ấn định ngay khi phát hành"
+        ],
+        correct: 3,
+        explain: "Cổ phiếu ưu đãi được cam kết một mức tỷ lệ cổ tức cố định (hoặc mức cổ tức xác định) ghi rõ khi phát hành, không phụ thuộc hoàn toàn vào lợi nhuận từng năm."
+      },
+      {
+        id: 76, ch: 5,
+        source: "120 Câu LT - Câu 29",
+        text: "Do có tính thanh khoản cao và rủi ro vỡ nợ thấp, chứng khoán ...... của chính phủ được các ngân hàng coi là dự trữ thứ cấp:",
+        options: ["Cao; Dài hạn", "Cao; Ngắn hạn (như tín phiếu kho bạc)", "Thấp; Dài hạn", "Thấp; Ngắn hạn"],
+        correct: 1,
+        explain: "Chứng khoán chính phủ ngắn hạn (tín phiếu kho bạc) có tính thanh khoản cao và an toàn tuyệt đối, đóng vai trò là 'khoản dự trữ thứ cấp' sinh lời của NHTM."
+      },
+      {
+        id: 77, ch: 5,
+        source: "120 Câu LT - Câu 54",
+        text: "Các doanh nghiệp chỉ huy động được vốn mới qua thị trường sơ cấp, vậy tại sao họ vẫn đặc biệt quan tâm đến thị trường thứ cấp?",
+        options: [
+          "Vì thị trường thứ cấp giúp tăng tính thanh khoản và định giá chứng khoán của công ty",
+          "Vì chứng khoán trên thị trường thứ cấp bán đắt hơn",
+          "Vì thị trường thứ cấp nộp thuế cho doanh nghiệp",
+          "Vì doanh nghiệp nhận được toàn bộ tiền lãi từ thị trường thứ cấp"
+        ],
+        correct: 0,
+        explain: "Thị trường thứ cấp tạo tính thanh khoản cao giúp nhà đầu tư yên tâm mua chứng khoán sơ cấp, đồng thời thị giá trên sàn thứ cấp là cơ sở để định giá đợt phát hành mới."
+      },
+      {
+        id: 78, ch: 5,
+        source: "120 Câu LT - Câu 69",
+        text: "Trong các công cụ tài chính dưới đây, đâu là công cụ tài chính ngắn hạn thuộc thị trường tiền tệ?",
+        options: [
+          "Trái phiếu Chính phủ kỳ hạn 10 năm",
+          "Cổ phiếu phổ thông của Amazon",
+          "Khoản vay thế chấp mua nhà 20 năm",
+          "Hợp đồng mua lại (Repo - Repurchase Agreement)"
+        ],
+        correct: 3,
+        explain: "Hợp đồng mua lại (Repo) là công cụ vay mượn vốn ngắn hạn (từ vài ngày đến vài tuần) có thế chấp bằng giấy tờ có giá, thuộc thị trường tiền tệ."
+      },
+      {
+        id: 79, ch: 5,
+        source: "120 Câu LT - Câu 72",
+        text: "Đặc điểm nào sau đây là SAI khi nhắc tới trái phiếu?",
+        options: [
+          "Trái phiếu thường có thời hạn trung hạn và dài hạn",
+          "Người nắm giữ trái phiếu là người đồng sở hữu một phần doanh nghiệp",
+          "Trái phiếu là công cụ được giao dịch trên thị trường vốn",
+          "Trái phiếu là công cụ chuyển vốn nhàn rỗi thành đầu tư"
+        ],
+        correct: 1,
+        explain: "Người nắm giữ trái phiếu chỉ là chủ nợ (Creditor) của doanh nghiệp, tuyệt đối không phải là chủ sở hữu (Owner/Shareholder)."
+      },
+      {
+        id: 80, ch: 5,
+        source: "120 Câu LT - Câu 74",
+        text: "Khối lượng chứng khoán mà các ngân hàng thương mại nắm giữ lớn nhất thường là:",
+        options: [
+          "Hợp đồng bảo hiểm",
+          "Chứng khoán Chính phủ (trái phiếu, tín phiếu kho bạc)",
+          "Cổ phiếu công ty khởi nghiệp",
+          "Chứng khoán phái sinh chưa niêm yết"
+        ],
+        correct: 1,
+        explain: "Chứng khoán chính phủ chiếm tỷ trọng lớn nhất trong danh mục đầu tư của NHTM vì tính an toàn cao, thanh khoản tốt và được NHTW chấp nhận làm tài sản thế chấp."
+      },
+      {
+        id: 81, ch: 5,
+        source: "120 Câu LT - Câu 82",
+        text: "Đặc điểm nào sau đây là SAI khi nhắc tới cổ phiếu?",
+        options: [
+          "Cổ phiếu là công cụ ít rủi ro nhất vì nhà đầu tư luôn được hưởng lợi nhuận",
+          "Cổ phiếu là công cụ vốn được giao dịch trên thị trường vốn",
+          "Cổ phiếu có thể mang lại lợi nhuận từ cổ tức và tăng giá vốn",
+          "Người nắm giữ cổ phiếu là chủ sở hữu công ty"
+        ],
+        correct: 0,
+        explain: "Cổ phiếu là công cụ tài chính rủi ro cao nhất: giá biến động khó lường, cổ tức không được bảo đảm và xếp cuối cùng khi thanh lý tài sản."
+      },
+      {
+        id: 82, ch: 5,
+        source: "Đề Thầy Biên 2024 - Câu 2",
+        text: "Thị trường nào sau đây KHÔNG PHẢI là thị trường thứ cấp?",
+        options: ["Thị trường IPO", "Thị trường ngoại hối", "Thị trường quyền chọn", "Thị trường kỳ hạn"],
+        correct: 0,
+        explain: "IPO (Initial Public Offering) là phát hành cổ phiếu lần đầu ra công chúng, thuộc thị trường sơ cấp (cấp 1)."
+      },
+      {
+        id: 83, ch: 5,
+        source: "Đề Thầy Biên 2024 - Câu 11",
+        text: "Vốn chủ sở hữu và các công cụ nợ có kỳ hạn lớn hơn một năm được giao dịch trên:",
+        options: ["Thị trường chuẩn hóa", "Thị trường vốn", "Thị trường liên bang", "Thị trường tiền tệ"],
+        correct: 1,
+        explain: "Thị trường vốn (Capital Market) là nơi giao dịch các công cụ trung, dài hạn và công cụ vốn cổ phần."
+      },
+      {
+        id: 84, ch: 5,
+        source: "Đề Thầy Biên 2024 - Câu 15",
+        text: "Thị trường thứ cấp hoạt động tích cực sẽ làm cho các công cụ tài chính trở nên:",
+        options: ["Có tính lỏng (thanh khoản) cao hơn", "Dễ bay hơi", "Kém hấp dẫn", "Đóng băng"],
+        correct: 0,
+        explain: "Thị trường thứ cấp tạo nơi mua bán thuận tiện, chuyển đổi chứng khoán ra tiền mặt dễ dàng, làm tăng tính lỏng cho công cụ tài chính."
+      },
+      {
+        id: 85, ch: 5,
+        source: "Đề Thầy Biên 2024 - Câu 16",
+        text: "Một công cụ nợ ngắn hạn do các công ty, tập đoàn lớn có xếp hạng tín nhiệm cao phát hành gọi là:",
+        options: ["Trái phiếu công ty", "Trái phiếu địa phương", "Vay thế chấp", "Thương phiếu (Commercial Paper)"],
+        correct: 3,
+        explain: "Thương phiếu là công cụ nợ ngắn hạn tín chấp do doanh nghiệp uy tín phát hành trên thị trường tiền tệ."
+      },
+      {
+        id: 86, ch: 5,
+        source: "Đề Thầy Biên 2024 - Câu 17",
+        text: "Nếu một công ty Mỹ bán trái phiếu tại London (Anh) và trái phiếu đó được định giá bằng đồng Đô la Mỹ (USD), thì đó là:",
+        options: ["Trái phiếu Anh", "Eurobond", "Trái phiếu nước ngoài", "Trái phiếu tiền mặt"],
+        correct: 1,
+        explain: "Eurobond là trái phiếu phát hành ngoài biên giới quốc gia của đồng tiền định giá (ở đây phát hành tại London nhưng định danh bằng USD)."
+      },
+      {
+        id: 87, ch: 5,
+        source: "Đề Thầy Biên 2024 - Câu 34",
+        text: "Giá của các công cụ thị trường tiền tệ thường ít biến động nhất vì:",
+        options: [
+          "Có quy định quản lý ngặt nghèo của chính phủ",
+          "Sự thiếu vắng cạnh tranh của các nhà đầu tư",
+          "Có kỳ hạn đáo hạn ngắn (dưới 1 năm)",
+          "Có mức giá trần do nhà nước áp đặt"
+        ],
+        correct: 2,
+        explain: "Vì kỳ hạn đáo hạn rất ngắn nên sự biến động của lãi suất thị trường có tác động chiết khấu rất nhỏ tới thị giá của công cụ thị trường tiền tệ."
+      },
+      {
+        id: 88, ch: 5,
+        source: "Giải SBT - Chương 5 - Câu 27",
+        text: "Sự khác biệt cốt lõi giữa Sở giao dịch tập trung (Exchange) và Thị trường phi tập trung (OTC) là:",
+        options: [
+          "Sở giao dịch có sàn niêm yết tập trung và khớp lệnh đấu giá; OTC giao dịch thỏa thuận phân tán qua mạng",
+          "Thị trường OTC không chịu sự quản lý của pháp luật",
+          "Sở giao dịch chỉ mua bán trái phiếu chính phủ",
+          "Thị trường OTC không có người môi giới"
+        ],
+        correct: 0,
+        explain: "Sở giao dịch có địa điểm vật lý/sàn tập trung, niêm yết chuẩn hóa và cơ chế khớp lệnh công khai. Thị trường OTC là mạng lưới giao dịch thỏa thuận phi tập trung."
+      },
+
+      // CHƯƠNG 6: NGÂN HÀNG THƯƠNG MẠI & TÍN DỤNG (18 câu)
+      {
+        id: 89, ch: 6,
+        source: "120 Câu LT - Câu 16",
+        text: "Bảng cân đối kế toán của ngân hàng thương mại phản ánh phương trình nào?",
+        options: [
+          "Tổng Nguồn vốn = Tổng Tài sản có = Tổng Nợ phải trả + Vốn chủ sở hữu",
+          "Tổng Tài sản = Tổng Tiền cho vay",
+          "Vốn chủ sở hữu = Tổng Tài sản - Dự trữ bắt buộc",
+          "Tổng Tài sản có = Tiền gửi tiết kiệm của khách hàng"
+        ],
+        correct: 0,
+        explain: "Bảng cân đối kế toán NHTM: Tổng Tài sản có = Tổng Tài sản nợ = Nợ phải trả + Vốn chủ sở hữu."
+      },
+      {
+        id: 90, ch: 6,
+        source: "120 Câu LT - Câu 31",
+        text: "Ngân hàng thương mại thực hiện các chức năng cơ bản nào trong nền kinh tế?",
+        options: [
+          "Trung gian tín dụng, Trung gian thanh toán, và Chức năng tạo tiền",
+          "Chỉ có chức năng nhận tiền gửi",
+          "Độc quyền phát hành tiền pháp định",
+          "Quản lý ngân sách nhà nước"
+        ],
+        correct: 0,
+        explain: "Ba chức năng kinh điển của NHTM: 1. Trung gian tín dụng; 2. Trung gian thanh toán; 3. Chức năng tạo tiền gửi (tạo bút tệ)."
+      },
+      {
+        id: 91, ch: 6,
+        source: "120 Câu LT - Câu 37",
+        text: "Với tỷ lệ dự trữ bắt buộc là 10%, nếu một khách hàng gửi 100 USD tiền mặt vào ngân hàng A, số tiền tối đa ngân hàng A có thể cho vay ra là:",
+        options: ["100 USD", "90 USD", "10 USD", "1.000 USD"],
+        correct: 1,
+        explain: "Dự trữ bắt buộc = 100 * 10% = 10 USD. Khả năng mở rộng cho vay tối đa của một ngân hàng đơn lẻ = 100 - 10 = 90 USD."
+      },
+      {
+        id: 92, ch: 6,
+        source: "120 Câu LT - Câu 39",
+        text: "Dự trữ vượt mức (Excess Reserves) là khoản tiền dự trữ mà NHTM nắm giữ nhằm mục đích:",
+        options: [
+          "Bắt buộc nộp cho ngân hàng trung ương",
+          "Đáp ứng kịp thời nhu cầu thanh toán và rút tiền hàng ngày của khách hàng",
+          "Đầu tư kinh doanh bất động sản",
+          "Chia cổ tức cho cổ đông sáng lập"
+        ],
+        correct: 1,
+        explain: "Dự trữ vượt mức do NHTM tự nguyện nắm giữ tại két hoặc gửi tại NHTW nhằm đảm bảo tính thanh khoản, phòng ngừa các đợt rút tiền đột biến."
+      },
+      {
+        id: 93, ch: 6,
+        source: "120 Câu LT - Câu 43",
+        text: "Căn cứ theo mục đích cấp tín dụng, quan hệ tín dụng bao gồm:",
+        options: [
+          "Tín dụng sản xuất và Tín dụng tiêu dùng",
+          "Tín dụng ngắn hạn và Tín dụng dài hạn",
+          "Tín dụng nhà nước và Tín dụng quốc tế",
+          "Tín dụng hàng hóa và Tín dụng bằng tiền"
+        ],
+        correct: 0,
+        explain: "Theo mục đích sử dụng vốn: Tín dụng sản xuất (phục vụ sản xuất kinh doanh) và Tín dụng tiêu dùng (phục vụ nhu cầu đời sống)."
+      },
+      {
+        id: 94, ch: 6,
+        source: "120 Câu LT - Câu 47",
+        text: "Khoản mục nào sau đây nằm bên TÀI SẢN CÓ của Ngân hàng Thương mại?",
+        options: [
+          "Khoản vay chiết khấu từ NHTW",
+          "Chứng chỉ tiền gửi (CDs) do ngân hàng phát hành",
+          "Tòa nhà trụ sở thuộc sở hữu của ngân hàng",
+          "Tài khoản tiền gửi thanh toán của khách hàng"
+        ],
+        correct: 2,
+        explain: "Tòa nhà trụ sở là Tài sản cố định -> Tài sản có. Tiền gửi của khách hàng, CDs phát hành và vay chiết khấu là nguồn vốn huy động -> Tài sản Nợ."
+      },
+      {
+        id: 95, ch: 6,
+        source: "120 Câu LT - Câu 73",
+        text: "Để khắc phục vấn đề lựa chọn đối nghịch trong hoạt động cấp tín dụng, các ngân hàng thương mại cần:",
+        options: [
+          "Thu thập thông tin đầy đủ, phân tích sàng lọc kỹ lưỡng khách hàng trước khi cho vay",
+          "Chỉ cho các doanh nghiệp nhà nước vay",
+          "Không yêu cầu tài sản thế chấp",
+          "Cho vay với mức lãi suất bằng 0"
+        ],
+        correct: 0,
+        explain: "Ngân hàng thực hiện nghiệp vụ Sàng lọc (Screening) thông qua thẩm định hồ sơ, tra cứu lịch sử tín dụng CIC để loại bỏ khách hàng rủi ro."
+      },
+      {
+        id: 96, ch: 6,
+        source: "120 Câu LT - Câu 78",
+        text: "Trong quan hệ tín dụng thương mại, chứng từ do người bán lập ra để yêu cầu người mua trả tiền được gọi là:",
+        options: ["Hối phiếu (Bill of exchange)", "Lệnh phiếu (Promissory note)", "Biên lai thanh toán", "Hóa đơn VAT"],
+        correct: 0,
+        explain: "Hối phiếu là lệnh đòi tiền vô điều kiện do người bán (chủ nợ) ký phát đòi tiền người mua."
+      },
+      {
+        id: 97, ch: 6,
+        source: "120 Câu LT - Câu 91",
+        text: "Khi khách hàng chuyển tiền từ tài khoản của mình sang tài khoản ở một ngân hàng khác, bảng cân đối của ngân hàng chuyển tiền sẽ thay đổi:",
+        options: [
+          "Tiền gửi thanh toán giảm và Tiền dự trữ giảm tương ứng",
+          "Tổng tài sản tăng lên",
+          "Tổng nguồn vốn không đổi",
+          "Dự trữ bắt buộc tăng lên"
+        ],
+        correct: 0,
+        explain: "Khách chuyển tiền đi -> Tiền gửi thanh toán (Tài sản nợ) giảm; Ngân hàng phải xuất tiền dự trữ thanh toán bù trừ -> Dự trữ (Tài sản có) giảm."
+      },
+      {
+        id: 98, ch: 6,
+        source: "120 Câu LT - Câu 101",
+        text: "Sau khi hết thời hạn hợp đồng thuê mua tín dụng (thuê tài chính), quyền sở hữu tài sản thường thuộc về:",
+        options: ["Nhà cung cấp máy móc", "Bên cho thuê (công ty tài chính)", "Bên thuê (được chuyển giao quyền sở hữu hoặc mua lại với giá danh nghĩa)", "Cơ quan thuế"],
+        correct: 2,
+        explain: "Trong thuê tài chính, khi kết thúc thời hạn thuê, bên thuê thường được quyền sở hữu tài sản hoặc mua lại với giá tượng trưng."
+      },
+      {
+        id: 99, ch: 6,
+        source: "120 Câu LT - Câu 103",
+        text: "Đối tượng trực tiếp của Tín dụng thương mại là:",
+        options: ["Tiền tệ", "Hàng hóa", "Cổ phiếu", "Bất động sản"],
+        correct: 1,
+        explain: "Tín dụng thương mại là quan hệ cấp tín dụng bằng hiện vật (bán chịu hàng hóa) giữa các doanh nghiệp trực tiếp sản xuất kinh doanh."
+      },
+      {
+        id: 100, ch: 6,
+        source: "120 Câu LT - Câu 105",
+        text: "Đặc điểm dễ nhận thấy nhất phân biệt tín dụng ngân hàng với tín dụng thương mại là:",
+        options: [
+          "Được cấp dưới hình thái tiền tệ thuần túy",
+          "Không yêu cầu trả lãi",
+          "Chỉ dành riêng cho các cơ quan nhà nước",
+          "Quy mô vốn luôn rất nhỏ"
+        ],
+        correct: 0,
+        explain: "Tín dụng ngân hàng được cung cấp bằng tiền mặt hoặc chuyển khoản; trong khi tín dụng thương mại cung cấp dưới dạng hàng hóa bán chịu."
+      },
+      {
+        id: 101, ch: 6,
+        source: "120 Câu LT - Câu 113",
+        text: "Giải pháp căn cơ và bền vững nhất để đẩy lùi và ngăn chặn vấn nạn tín dụng đen là:",
+        options: [
+          "Hình sự hóa tất cả các giao dịch vay nợ dân sự",
+          "Hạn chế nhu cầu chi tiêu của người dân",
+          "Phát triển mạnh mẽ mạng lưới tín dụng tiêu dùng vi mô của các tổ chức tín dụng chính thức",
+          "Cấm hoàn toàn các công ty tài chính hoạt động"
+        ],
+        correct: 2,
+        explain: "Tạo điều kiện cho người dân tiếp cận các gói vay tiêu dùng hợp pháp, thủ tục nhanh gọn với chi phí hợp lý sẽ triệt tiêu đất sống của tín dụng đen."
+      },
+      {
+        id: 102, ch: 6,
+        source: "120 Câu LT - Câu 115",
+        text: "Nội dung nào sau đây KHÔNG PHẢI là vai trò của tín dụng ngân hàng?",
+        options: [
+          "Tập trung vốn nhàn rỗi thúc đẩy kinh tế phát triển",
+          "Là cầu nối luân chuyển vốn hiệu quả",
+          "Nâng cao mức sống của dân cư",
+          "Trực tiếp làm gia tăng vốn chủ sở hữu cho công ty cổ phần đi vay"
+        ],
+        correct: 3,
+        explain: "Vay tín dụng ngân hàng làm gia tăng Nợ phải trả của doanh nghiệp, tuyệt đối không làm gia tăng Vốn chủ sở hữu."
+      },
+      {
+        id: 103, ch: 6,
+        source: "LMS Cô Linh - Q40",
+        text: "Tổng dự trữ của ngân hàng thương mại trừ đi tài khoản tiền gửi tại NHTW chính bằng:",
+        options: ["Dự trữ bắt buộc", "Dự trữ vượt mức", "Tiền mặt tồn tại quầy (két) của NHTM", "Tiền mặt trong lưu thông"],
+        correct: 2,
+        explain: "Tổng dự trữ NHTM = Tiền mặt tại quầy/két + Tiền gửi dự trữ tại NHTW. Do đó: Tổng dự trữ - Tiền gửi tại NHTW = Tiền mặt tại két."
+      },
+      {
+        id: 104, ch: 6,
+        source: "LMS Cô Linh - Q28",
+        text: "Nếu một ngân hàng có 100.000 USD tiền gửi thanh toán, tỷ lệ DTBB là 20%, và đang nắm giữ 40.000 USD dự trữ. Số tiền gửi bị rút tối đa mà ngân hàng có thể đáp ứng mà không cần vay thêm vốn là:",
+        options: ["25.000 USD", "20.000 USD", "30.000 USD", "10.000 USD"],
+        correct: 0,
+        explain: "Gọi X là số tiền bị rút. Sau khi rút: Tiền gửi còn (100.000 - X); Dự trữ còn (40.000 - X). Điều kiện dự trữ còn lại đủ đáp ứng DTBB: 40.000 - X >= 20% * (100.000 - X) <=> 40.000 - X >= 20.000 - 0.2X <=> 20.000 >= 0.8X <=> X <= 25.000 USD."
+      },
+      {
+        id: 105, ch: 6,
+        source: "LMS Cô Linh - Q11",
+        text: "Món vay mà NHTM nhận được từ Ngân hàng Trung ương được gọi là ......, và đại diện cho ......",
+        options: [
+          "Món vay chiết khấu; Nguồn vốn huy động",
+          "Món vay chiết khấu; Việc sử dụng vốn",
+          "Món vay dự trữ; Tài sản có",
+          "Món vay liên ngân hàng; Vốn chủ sở hữu"
+        ],
+        correct: 0,
+        explain: "NHTM vay tái chiết khấu từ NHTW -> Món vay chiết khấu (Discount loans), nằm ở bên Tài sản Nợ (nguồn vốn huy động)."
+      },
+      {
+        id: 106, ch: 6,
+        source: "Giải SBT - Chương 8 - Câu 2",
+        text: "Để quản lý rủi ro tín dụng khi cho vay, biện pháp ngân hàng yêu cầu khách hàng phải duy trì số dư tiền gửi tối thiểu gọi là:",
+        options: ["Sàng lọc khách hàng", "Số dư bù (Compensating balance)", "Hạn mức tín dụng", "Thẩm định dự án"],
+        correct: 1,
+        explain: "Số dư bù là số tiền tối thiểu khách hàng phải để lại trong tài khoản phát séc tại ngân hàng, giúp ngân hàng giám sát dòng tiền và làm vật bảo đảm dự phòng."
+      },
+
+      // CHƯƠNG 7: LÃI SUẤT & ĐỊNH GIÁ TRÁI PHIẾU (18 câu)
+      {
+        id: 107, ch: 7,
+        source: "120 Câu LT - Câu 4",
+        text: "Giả sử các yếu tố khác không đổi, cầu về trái phiếu sẽ tăng lên khi:",
+        options: [
+          "Lãi suất kỳ vọng trong tương lai tăng mạnh",
+          "Của cải và thu nhập của nền kinh tế gia tăng",
+          "Thị trường cổ phiếu trở nên hấp dẫn hơn",
+          "Rủi ro của trái phiếu tăng"
+        ],
+        correct: 1,
+        explain: "Theo lý thuyết cầu tài sản, khi của cải và thu nhập quốc dân tăng lên, người dân có xu hướng phân bổ thêm tiền vào mua trái phiếu -> cầu trái phiếu tăng."
+      },
+      {
+        id: 108, ch: 7,
+        source: "120 Câu LT - Câu 24",
+        text: "Xác định lãi suất hoàn vốn của một khoản tiền gửi tiết kiệm trả lãi trước có mệnh giá 200 triệu đồng, lãi suất danh nghĩa 10%/năm, kỳ hạn 1 năm:",
+        options: ["8,91%/năm", "10%/năm", "9,09%/năm", "11,11%/năm"],
+        correct: 3,
+        explain: "Tiền lãi trả ngay đầu kỳ: 200 * 10% = 20 triệu. Số vốn thực gửi: 200 - 20 = 180 triệu. Cuối kỳ nhận 200 triệu. Lãi suất hoàn vốn: i = 20 / 180 = 11,11%/năm."
+      },
+      {
+        id: 109, ch: 7,
+        source: "120 Câu LT - Câu 35",
+        text: "Tính lãi suất hoàn vốn của trái phiếu chiết khấu kỳ hạn 2 năm có mệnh giá 2.000.000 đồng và giá bán phát hành là 1.800.000 đồng:",
+        options: ["5,72%/năm", "4,87%/năm", "6,02%/năm", "5,41%/năm"],
+        correct: 3,
+        explain: "Công thức P = M / (1 + i)^n => 1.800.000 = 2.000.000 / (1 + i)^2 => (1 + i)^2 = 1,1111 => 1 + i = 1,05409 => i ≈ 5,41%/năm."
+      },
+      {
+        id: 110, ch: 7,
+        source: "120 Câu LT - Câu 52",
+        text: "Yếu tố nào sau đây làm dịch chuyển đường CUNG vốn vay (tức đường Cầu trái phiếu) sang phải?",
+        options: [
+          "Các doanh nghiệp gia tăng cơ hội đầu tư sinh lời",
+          "Thu nhập và của cải của công chúng gia tăng",
+          "Chính phủ tăng phát hành trái phiếu bù thâm hụt",
+          "Kỳ vọng lạm phát tăng cao"
+        ],
+        correct: 1,
+        explain: "Thu nhập và của cải tăng khiến người dân tiết kiệm nhiều hơn và sẵn sàng cấp vốn ra thị trường -> Cung vốn vay tăng (dịch chuyển sang phải)."
+      },
+      {
+        id: 111, ch: 7,
+        source: "120 Câu LT - Câu 64",
+        text: "Lãi suất hoàn vốn (Yield to Maturity - YTM) là mức lãi suất làm cho:",
+        options: [
+          "Giá trị hiện tại của các dòng tiền nhận được trong tương lai bằng đúng giá mua chứng khoán hôm nay",
+          "Giá bán chứng khoán bằng đúng mệnh giá",
+          "Tiền lãi hàng năm bằng 0",
+          "Lãi suất danh nghĩa bằng tỷ lệ lạm phát"
+        ],
+        correct: 0,
+        explain: "Định nghĩa chuẩn của YTM: Là tỷ lệ chiết khấu cân bằng giá thị trường hiện tại của công cụ tài chính với giá trị hiện tại của mọi khoản thu nhập trong tương lai."
+      },
+      {
+        id: 112, ch: 7,
+        source: "120 Câu LT - Câu 67",
+        text: "Nhận xét nào sau đây là ĐÚNG về phương pháp tính lãi đơn và lãi kép?",
+        options: [
+          "Tiền lãi của kỳ tính lãi đầu tiên là hoàn toàn giống nhau giữa hai phương pháp",
+          "Lãi đơn luôn cho số tiền lớn hơn lãi kép",
+          "Lãi kép ở kỳ thứ nhất luôn cao hơn lãi đơn",
+          "Hai phương pháp luôn cho cùng một kết quả ở mọi kỳ"
+        ],
+        correct: 0,
+        explain: "Ở kỳ tính lãi thứ nhất (n = 1), tiền lãi đều tính trên số vốn gốc ban đầu: I = P * r, do đó kết quả lãi đơn và lãi kép là như nhau."
+      },
+      {
+        id: 113, ch: 7,
+        source: "120 Câu LT - Câu 70",
+        text: "Khi lãi suất thị trường tăng lên một mức như nhau đối với tất cả các kỳ hạn:",
+        options: [
+          "Giá trái phiếu dài hạn sẽ giảm ít hơn giá trái phiếu ngắn hạn",
+          "Giá trái phiếu dài hạn sẽ giảm nhiều hơn giá trái phiếu ngắn hạn",
+          "Giá trái phiếu dài hạn sẽ tăng",
+          "Giá trái phiếu không chịu tác động của lãi suất"
+        ],
+        correct: 1,
+        explain: "Vì rủi ro lãi suất tỷ lệ thuận với thời hạn đáo hạn: Trái phiếu dài hạn có độ nhạy cảm cao hơn nhiều trước biến động lãi suất."
+      },
+      {
+        id: 114, ch: 7,
+        source: "120 Câu LT - Câu 76",
+        text: "Một trái phiếu coupon có mệnh giá 5.000 USD, lãi suất coupon 3%/năm đang được bán với giá 4.900 USD. Lãi suất hoàn vốn của trái phiếu này là:",
+        options: ["2,0%/năm", "2,5%/năm", "3,0%/năm", "3,5%/năm"],
+        correct: 3,
+        explain: "Giá bán (4.900 USD) < Mệnh giá (5.000 USD) => Trái phiếu bán dưới mệnh giá (chiết khấu) => Lãi suất hoàn vốn YTM phải lớn hơn lãi suất coupon (3%). Do đó đáp án là 3,5%/năm."
+      },
+      {
+        id: 115, ch: 7,
+        source: "120 Câu LT - Câu 89",
+        text: "Lý thuyết thị trường phân đoạn (Segmented Markets Theory) giải thích hiện tượng:",
+        options: [
+          "Tại sao lãi suất ở các kỳ hạn khác nhau lại có thể biến động độc lập hoặc ngược chiều với nhau",
+          "Tại sao lãi suất các kỳ hạn luôn biến động cùng chiều",
+          "Đường cong lợi tức luôn luôn dốc lên",
+          "Lãi suất dài hạn luôn gấp đôi lãi suất ngắn hạn"
+        ],
+        correct: 0,
+        explain: "Thuyết thị trường phân đoạn giả định trái phiếu ở các kỳ hạn khác nhau hoàn toàn không thể thay thế cho nhau, lãi suất mỗi kỳ hạn được quyết định bởi cung cầu riêng biệt của phân khúc đó."
+      },
+      {
+        id: 116, ch: 7,
+        source: "120 Câu LT - Câu 97",
+        text: "Lý thuyết dự tính (Expectations Theory) về cấu trúc kỳ hạn giải thích hiện tượng thực nghiệm nào?",
+        options: [
+          "Vì sao lãi suất của các trái phiếu kỳ hạn khác nhau thường cùng biến động cùng chiều theo thời gian",
+          "Vì sao đường cong lợi tức luôn có hệ số góc âm",
+          "Vì sao lãi suất dài hạn luôn bằng 0",
+          "Vì sao nhà đầu tư luôn chỉ mua trái phiếu ngắn hạn"
+        ],
+        correct: 0,
+        explain: "Thuyết dự tính phát biểu: Lãi suất dài hạn bằng bình quân các mức lãi suất ngắn hạn kỳ vọng. Do đó khi lãi ngắn hạn tăng, lãi dài hạn cũng tăng theo."
+      },
+      {
+        id: 117, ch: 7,
+        source: "120 Câu LT - Câu 117",
+        text: "Theo lý thuyết phần bù thanh khoản / môi trường ưu tiên, đường cong lợi tức thường có xu hướng dốc lên vì:",
+        options: [
+          "Phần bù kỳ hạn (phần bù thanh khoản) tăng dần theo thời hạn của trái phiếu",
+          "Lãi suất ngắn hạn luôn cao hơn lãi suất dài hạn",
+          "Lạm phát luôn luôn giảm trong dài hạn",
+          "Chính phủ cấm phát hành trái phiếu dài hạn"
+        ],
+        correct: 0,
+        explain: "Nhà đầu tư đối mặt rủi ro cao hơn khi nắm giữ trái phiếu dài hạn, do đó họ đòi hỏi một mức phần bù thanh khoản dương và tăng dần theo kỳ hạn."
+      },
+      {
+        id: 118, ch: 7,
+        source: "Đề Thầy Biên 2024 - Câu 3",
+        text: "Mọi thứ khác không đổi, lãi suất cho vay mua nhà giảm sẽ khiến chi tiêu cho nhà ở:",
+        options: ["Tăng", "Giảm", "Không đổi", "Không thể xác định"],
+        correct: 0,
+        explain: "Lãi suất giảm làm giảm chi phí gánh nặng nợ vay, kích thích nhu cầu mua nhà của người dân tăng lên."
+      },
+      {
+        id: 119, ch: 7,
+        source: "Đề Thầy Biên 2024 - Câu 20",
+        text: "So với lãi suất trái phiếu chính phủ Mỹ dài hạn, lãi suất của tín phiếu kho bạc kỳ hạn 3 tháng thường:",
+        options: [
+          "Dao động nhiều hơn và mức trung bình thấp hơn",
+          "Dao động ít hơn và mức trung bình cao hơn",
+          "Dao động ít hơn và mức trung bình thấp hơn",
+          "Dao động nhiều hơn và mức trung bình cao hơn"
+        ],
+        correct: 0,
+        explain: "Lãi suất ngắn hạn rất nhạy cảm với các quyết định điều hành chính sách tiền tệ hàng ngày của Fed nên dao động mạnh hơn, nhưng trung bình luôn thấp hơn lãi suất dài hạn do không có phần bù kỳ hạn."
+      },
+      {
+        id: 120, ch: 7,
+        source: "Đề Thầy Biên 2024 - Câu 26",
+        text: "Lãi suất của trái phiếu doanh nghiệp có xếp hạng tín nhiệm BBB (trung bình) so với trái phiếu chính phủ cùng kỳ hạn thì:",
+        options: ["Cao hơn (do có phần bù rủi ro vỡ nợ)", "Thấp hơn", "Tương đương", "Bằng một nửa"],
+        correct: 0,
+        explain: "Trái phiếu doanh nghiệp luôn tiềm ẩn rủi ro vỡ nợ cao hơn trái phiếu chính phủ, do đó nhà đầu tư đòi hỏi một mức lãi suất cao hơn (phần bù rủi ro vỡ nợ)."
+      },
+      {
+        id: 121, ch: 7,
+        source: "LMS Cô Linh - Q37",
+        text: "Một trái phiếu mệnh giá 100$, coupon 10% được mua vào với giá 150$ và bán ra sau 1 năm với giá 130$. Tỷ suất lợi nhuận (Rate of Return) trong năm đó là:",
+        options: ["-6,67%", "5,87%", "7,67%", "-7,67%"],
+        correct: 0,
+        explain: "Tiền lãi coupon nhận được C = 100 * 10% = 10$. Tỷ suất sinh lời R = (P_bán - P_mua + C) / P_mua = (130 - 150 + 10) / 150 = -10 / 150 = -6,67%."
+      },
+      {
+        id: 122, ch: 7,
+        source: "LMS Cô Linh - Q44",
+        text: "Trong các tình huống tín dụng sau, tình huống nào đem lại lợi ích lớn nhất cho NGƯỜI ĐI VAY?",
+        options: [
+          "Lãi suất danh nghĩa là 13% và tỷ lệ lạm phát kỳ vọng là 15%",
+          "Lãi suất danh nghĩa là 9% và tỷ lệ lạm phát kỳ vọng là 7%",
+          "Lãi suất danh nghĩa là 4% và tỷ lệ lạm phát kỳ vọng là 1%",
+          "Lãi suất danh nghĩa là 25% và tỷ lệ lạm phát kỳ vọng là 50%"
+        ],
+        correct: 3,
+        explain: "Lãi suất thực = Lãi suất danh nghĩa - Lạm phát. Ở tình huống D: r = 25% - 50% = -25% (mức lãi suất thực âm sâu nhất, người đi vay trả nợ bằng đồng tiền mất giá một nửa, có lợi lớn nhất)."
+      },
+      {
+        id: 123, ch: 7,
+        source: "LMS Cô Linh - Q11",
+        text: "Đường cong lợi tức đảo ngược (Inverted yield curve) có đặc điểm hình học là:",
+        options: ["Có hệ số góc âm (dốc xuống)", "Có hệ số góc dương (dốc lên)", "Hình chữ U", "Đường nằm ngang phẳng"],
+        correct: 0,
+        explain: "Đường cong lợi tức đảo ngược xuất hiện khi lãi suất ngắn hạn cao hơn lãi suất dài hạn, đồ thị dốc xuống từ trái qua phải (hệ số góc âm), là tín hiệu cảnh báo suy thoái kinh tế."
+      },
+      {
+        id: 124, ch: 7,
+        source: "LMS Cô Linh - Q42",
+        text: "Trong 4 hiệu ứng từ việc tăng lượng cung tiền tác động lên lãi suất, hiệu ứng nào có xu hướng LÀM GIẢM LÃI SUẤT?",
+        options: [
+          "Hiệu ứng thanh khoản (Liquidity effect)",
+          "Hiệu ứng thu nhập (Income effect)",
+          "Hiệu ứng mức giá (Price-level effect)",
+          "Hiệu ứng lạm phát kỳ vọng (Expected-inflation effect)"
+        ],
+        correct: 0,
+        explain: "Khi cung tiền tăng, hiệu ứng thanh khoản làm dịch chuyển đường cung tiền sang phải ngay tức thì, kéo lãi suất giảm xuống. 3 hiệu ứng còn lại đều làm tăng cầu tiền và đẩy lãi suất tăng trở lại."
+      },
+
+      // CHƯƠNG 8: NHTW & QUÁ TRÌNH CUNG ỨNG TIỀN TỆ (20 câu)
+      {
+        id: 125, ch: 8,
+        source: "120 Câu LT - Câu 6",
+        text: "Ưu điểm quan trọng nhất của công cụ cho vay chiết khấu của NHTW là:",
+        options: [
+          "Kiểm soát chính xác cơ số tiền tệ",
+          "Giúp NHTW thực hiện vai trò Người cho vay cuối cùng đối với các NHTM",
+          "Duy trì tỷ giá cố định",
+          "Xóa bỏ nợ xấu ngân hàng"
+        ],
+        correct: 1,
+        explain: "Cho vay chiết khấu (tái cấp vốn) là công cụ phòng thủ tối thượng giúp NHTW bơm thanh khoản khẩn cấp, ngăn chặn sự sụp đổ dây chuyền của hệ thống ngân hàng."
+      },
+      {
+        id: 126, ch: 8,
+        source: "120 Câu LT - Câu 8",
+        text: "Chính sách tiền tệ quốc gia do cơ quan nào hoạch định và thực thi?",
+        options: ["Ngân hàng Trung ương", "Bộ Tài chính", "Ủy ban Chứng khoán", "Kho bạc Nhà nước"],
+        correct: 0,
+        explain: "Theo thông lệ quốc tế và Luật NHNN Việt Nam, Ngân hàng Trung ương độc quyền hoạch định và thực thi chính sách tiền tệ."
+      },
+      {
+        id: 127, ch: 8,
+        source: "120 Câu LT - Câu 15",
+        text: "Nếu tỷ lệ dự trữ bắt buộc là 10%, trong mô hình cung tiền giản đơn, số nhân tiền tệ sẽ là:",
+        options: ["10,0", "5,0", "2,5", "1,0"],
+        correct: 0,
+        explain: "Mô hình số nhân tiền giản đơn: m = 1 / rr = 1 / 0.10 = 10,0."
+      },
+      {
+        id: 128, ch: 8,
+        source: "120 Câu LT - Câu 19",
+        text: "Chính sách tiền tệ thắt chặt của Ngân hàng Trung ương tác động trực tiếp làm:",
+        options: [
+          "Giảm lượng tiền cung ứng (MS)",
+          "Tăng lượng mua tín phiếu kho bạc trên thị trường mở",
+          "Giảm tỷ lệ dự trữ bắt buộc",
+          "Tăng hạn mức tín dụng cho các ngân hàng"
+        ],
+        correct: 0,
+        explain: "CSTT thắt chặt hướng tới mục tiêu thu hẹp quy mô cung tiền (MS) để kiểm soát lạm phát và hạ nhiệt nền kinh tế."
+      },
+      {
+        id: 129, ch: 8,
+        source: "120 Câu LT - Câu 36",
+        text: "NHTW thực thi chính sách tiền tệ mở rộng sẽ dẫn tới kết quả:",
+        options: [
+          "Làm tăng lượng tiền cung ứng (MS)",
+          "Làm giảm lượng tiền cung ứng",
+          "Làm tăng tỷ lệ dự trữ bắt buộc",
+          "Làm giảm dự trữ của các NHTM"
+        ],
+        correct: 0,
+        explain: "CSTT mở rộng bơm thêm thanh khoản vào hệ thống qua OMO, hạ lãi suất hoặc giảm DTBB, làm tăng khối tiền cung ứng MS."
+      },
+      {
+        id: 130, ch: 8,
+        source: "120 Câu LT - Câu 48",
+        text: "Sau khi doanh nghiệp nộp thuế bằng tiền mặt vào tài khoản Kho bạc Nhà nước tại NHTM, lượng cung tiền MS của nền kinh tế sẽ:",
+        options: ["Không đổi", "Tăng mạnh", "Giảm mạnh", "Tùy thuộc vào lãi suất"],
+        correct: 0,
+        explain: "Nộp thuế là giao dịch luân chuyển vốn giữa doanh nghiệp và kho bạc, không tác động đến cơ số tiền tệ MB do NHTW phát hành, số nhân m không đổi nên MS không đổi."
+      },
+      {
+        id: 131, ch: 8,
+        source: "120 Câu LT - Câu 50",
+        text: "Giả sử các yếu tố khác không đổi, tiền dự trữ của hệ thống NHTM sẽ tăng lên khi:",
+        options: [
+          "NHTW cho NHTM vay chiết khấu (tái cấp vốn)",
+          "NHTM phát hành trái phiếu",
+          "NHTW bán tín phiếu trên thị trường mở",
+          "NHTM rút tiền mặt từ NHTW về két"
+        ],
+        correct: 0,
+        explain: "NHTW cấp khoản vay chiết khấu sẽ ghi Có vào tài khoản tiền gửi dự trữ của NHTM tại NHTW, làm tăng dự trữ toàn hệ thống."
+      },
+      {
+        id: 132, ch: 8,
+        source: "120 Câu LT - Câu 51",
+        text: "Khi Ngân hàng Trung ương mua 100 triệu USD trái phiếu chính phủ trên thị trường mở từ NHTM A, dự trữ trong hệ thống ngân hàng sẽ:",
+        options: [
+          "Tăng thêm đúng 100 triệu USD",
+          "Giảm đi 100 triệu USD",
+          "Tăng gấp đôi",
+          "Không thay đổi"
+        ],
+        correct: 0,
+        explain: "Nghiệp vụ mua OMO của NHTW bơm trực tiếp 100 triệu USD vào tài khoản dự trữ của NHTM A, làm tăng tổng dự trữ ngân hàng thêm đúng 100 triệu USD."
+      },
+      {
+        id: 133, ch: 8,
+        source: "120 Câu LT - Câu 63",
+        text: "Khi Ngân hàng Trung ương mua tín phiếu kho bạc từ ngân hàng thương mại, dự trữ trong hệ thống ngân hàng ...... và cơ sở tiền tệ (MB) ......:",
+        options: ["Tăng; Tăng", "Giảm; Tăng", "Giảm; Giảm", "Tăng; Giảm"],
+        correct: 0,
+        explain: "NHTW mua chứng khoán -> Bơm tiền -> Dự trữ ngân hàng tăng -> Cơ số tiền tệ MB = C + R tăng lên tương ứng."
+      },
+      {
+        id: 134, ch: 8,
+        source: "120 Câu LT - Câu 85",
+        text: "Cơ số tiền tệ (MB - Monetary Base) của Ngân hàng Trung ương phụ thuộc vào:",
+        options: [
+          "Dự trữ bắt buộc, dự trữ vượt mức và lượng tiền mặt lưu thông ngoài ngân hàng",
+          "Chỉ phụ thuộc vào tỷ lệ dự trữ bắt buộc",
+          "Tiền gửi tiết kiệm kỳ hạn dài",
+          "Thâm hụt cán cân thương mại"
+        ],
+        correct: 0,
+        explain: "Công thức chuẩn: MB = C + R = C + RR + ER (Tiền mặt lưu hành C + Dự trữ bắt buộc RR + Dự trữ vượt mức ER)."
+      },
+      {
+        id: 135, ch: 8,
+        source: "Đề Thầy Biên 2024 - Câu 40",
+        text: "Việc quản lý lượng cung tiền và lãi suất trong nền kinh tế được gọi là chính sách ...... và do ...... thực hiện:",
+        options: [
+          "Chính sách tiền tệ; Ngân hàng trung ương",
+          "Chính sách tài khóa; Bộ Tài chính",
+          "Chính sách công; Ủy ban nhân dân",
+          "Chính sách thương mại; Bộ Công thương"
+        ],
+        correct: 0,
+        explain: "Chính sách tiền tệ do Ngân hàng Trung ương thực hiện nhằm kiểm soát cung tiền và lãi suất."
+      },
+      {
+        id: 136, ch: 8,
+        source: "LMS Cô Linh - Q2",
+        text: "Cả ...... và ...... đều là tài sản có (Assets) trên Bảng cân đối của Ngân hàng Trung ương:",
+        options: [
+          "Chứng khoán nắm giữ; Tiền cho vay chiết khấu",
+          "Tiền mặt lưu hành; Tiền dự trữ của NHTM",
+          "Tiền lưu hành; Chứng khoán",
+          "Dự trữ ngoại hối; Tiền gửi của Kho bạc"
+        ],
+        correct: 0,
+        explain: "Tài sản có của NHTW gồm: Chứng khoán chính phủ, Tiền cho vay chiết khấu các NHTM và Vàng/Dự trữ ngoại hối."
+      },
+      {
+        id: 137, ch: 8,
+        source: "LMS Cô Linh - Q3",
+        text: "Các tác nhân tham gia vào quá trình cung ứng tiền tệ trong nền kinh tế bao gồm:",
+        options: [
+          "Ngân hàng Trung ương, các tổ chức nhận tiền gửi (NHTM), người gửi tiền và người vay tiền",
+          "Chỉ có Ngân hàng Trung ương",
+          "NHTW và Bộ Tài chính",
+          "NHTM và Kho bạc Nhà nước"
+        ],
+        correct: 0,
+        explain: "Cung ứng tiền là sự phối hợp của 4 tác nhân: NHTW (kiểm soát MB), NHTM (tạo tiền gửi), Người gửi tiền (tỷ lệ c) và Người đi vay vốn."
+      },
+      {
+        id: 138, ch: 8,
+        source: "LMS Cô Linh - Q9",
+        text: "Công cụ linh hoạt và chủ động nhất của Ngân hàng Trung ương trong điều hành CSTT là:",
+        options: [
+          "Nghiệp vụ thị trường mở (OMO)",
+          "Kiểm soát lãi suất trần",
+          "Hạn mức tín dụng",
+          "Tỷ lệ dự trữ bắt buộc"
+        ],
+        correct: 0,
+        explain: "OMO có tính linh hoạt cao, NHTW hoàn toàn chủ động về thời điểm, quy mô và có thể đảo ngược vị thế ngay ngày hôm sau nếu cần."
+      },
+      {
+        id: 139, ch: 8,
+        source: "LMS Cô Linh - Q18",
+        text: "Khi một NHTM bán chứng khoán chính phủ cho NHTW, tổng dự trữ trong hệ thống ngân hàng sẽ ...... và cơ sở tiền tệ MB sẽ ......:",
+        options: ["Tăng; Tăng", "Giảm; Tăng", "Tăng; Giảm", "Giảm; Giảm"],
+        correct: 0,
+        explain: "NHTW mua chứng khoán từ NHTM và thanh toán bằng tiền chuyển khoản vào tài khoản dự trữ -> Dự trữ R tăng -> Cơ sở tiền MB = C + R tăng."
+      },
+      {
+        id: 140, ch: 8,
+        source: "LMS Cô Linh - Q30",
+        text: "Nếu một người bán trái phiếu cho Fed rồi đem đổi ngay séc của Fed thành tiền mặt chi tiêu, thì dự trữ ngân hàng và tiền tệ lưu thông sẽ:",
+        options: [
+          "Dự trữ không đổi; Tiền lưu thông tăng",
+          "Dự trữ tăng; Tiền lưu thông không đổi",
+          "Cả hai cùng tăng",
+          "Dự trữ giảm; Tiền lưu thông tăng"
+        ],
+        correct: 0,
+        explain: "Tiền mặt rút ra ngoài hệ thống chi tiêu nên C tăng. Các ngân hàng không nhận được khoản tiền gửi này nên dự trữ R không đổi."
+      },
+      {
+        id: 141, ch: 8,
+        source: "LMS Cô Linh - Q34",
+        text: "Giả sử r = 10%, c = 40% và e = 0. Sự gia tăng của tỷ lệ DTBB r lên 15% làm cho số nhân tiền M1 thay đổi như thế nào?",
+        options: [
+          "Giảm từ 2,8 xuống 2,55",
+          "Tăng từ 2,55 lên 2,8",
+          "Giảm từ 2,0 xuống 1,82",
+          "Tăng từ 1,82 lên 2,0"
+        ],
+        correct: 0,
+        explain: "m = (c + 1) / (c + r + e). Khi r=10%: m1 = 1.4 / 0.5 = 2.8. Khi r=15%: m2 = 1.4 / 0.55 = 2.545 ≈ 2.55. Số nhân tiền giảm từ 2,8 xuống 2,55."
+      },
+      {
+        id: 142, ch: 8,
+        source: "LMS Cô Linh - Q35",
+        text: "Giả sử tỷ lệ dự trữ bắt buộc là 5%, trong mô hình cung tiền đơn giản, khi NHTW mua 200 tỷ đồng chứng khoán từ NHTM, lượng cung tiền MS sẽ:",
+        options: ["Tăng 4.000 tỷ đồng", "Tăng 2.000 tỷ đồng", "Giảm 4.000 tỷ đồng", "Giảm 2.000 tỷ đồng"],
+        correct: 0,
+        explain: "Số nhân tiền đơn giản m = 1 / rr = 1 / 0.05 = 20. Khi NHTW mua 200 tỷ chứng khoán -> Delta MB = +200 tỷ -> Delta MS = 200 * 20 = +4.000 tỷ đồng."
+      },
+      {
+        id: 143, ch: 8,
+        source: "LMS Cô Linh - Q39",
+        text: "Tổng các khoản mục bên Tài sản Nợ của Ngân hàng Trung ương được gọi là:",
+        options: ["Cơ số tiền tệ (MB)", "Cung tiền (MS)", "Dự trữ ngân hàng", "Khối tiền M2"],
+        correct: 0,
+        explain: "Tài sản Nợ của NHTW = Tiền mặt lưu thông ngoài ngân hàng (C) + Dự trữ ngân hàng (R) = Cơ sở tiền tệ MB."
+      },
+      {
+        id: 144, ch: 8,
+        source: "LMS Cô Linh - Q47",
+        text: "Ủy ban Thị trường Mở Liên bang (FOMC) của Fed thường có bao nhiêu cuộc họp định kỳ chính thức trong một năm?",
+        options: ["Tám (8) lần", "Mười hai (12) lần", "Bốn (4) lần", "Sáu (6) lần"],
+        correct: 0,
+        explain: "Theo quy chế của Fed, FOMC họp định kỳ 8 lần mỗi năm (khoảng 6 tuần một lần) để đánh giá tình hình kinh tế và quyết định mức lãi suất quỹ liên bang."
+      },
+
+      // CHƯƠNG 9: LẠM PHÁT, THẤT NGHIỆP & TÀI CHÍNH QUỐC TẾ (16 câu)
+      {
+        id: 145, ch: 9,
+        source: "120 Câu LT - Câu 10",
+        text: "Lạm phát cao và kéo dài gây tác hại nghiêm trọng đến nền kinh tế chủ yếu vì nó:",
+        options: [
+          "Làm biến dạng cơ cấu đầu tư và méo mó tín hiệu giá cả",
+          "Kích thích đầu tư nước ngoài",
+          "Làm tăng sức mua của người lao động",
+          "Giúp cân bằng cán cân thương mại"
+        ],
+        correct: 0,
+        explain: "Lạm phát làm mất giá trị đồng tiền, gây nhiễu loạn thông tin giá cả, khiến nguồn vốn dịch chuyển vào tài sản đầu cơ thay vì sản xuất thực."
+      },
+      {
+        id: 146, ch: 9,
+        source: "120 Câu LT - Câu 18",
+        text: "Khi nhu cầu chi tiêu trong nền kinh tế tăng vọt đẩy tổng cầu (AD) vượt sản lượng tiềm năng, tỷ lệ thất nghiệp sẽ:",
+        options: [
+          "Thấp hơn tỷ lệ thất nghiệp tự nhiên",
+          "Cao hơn tỷ lệ thất nghiệp tự nhiên",
+          "Bằng tỷ lệ thất nghiệp tự nhiên",
+          "Không thay đổi"
+        ],
+        correct: 0,
+        explain: "Tổng cầu mở rộng quá mức đẩy nền kinh tế vào trạng thái tăng trưởng nóng, các doanh nghiệp tăng tuyển dụng khiến thất nghiệp giảm xuống dưới mức tự nhiên."
+      },
+      {
+        id: 147, ch: 9,
+        source: "120 Câu LT - Câu 27",
+        text: "Phân tích các cuộc siêu lạm phát trong lịch sử chỉ ra rằng nguyên nhân sâu xa nhất bắt nguồn từ:",
+        options: [
+          "Chính phủ tài trợ thâm hụt ngân sách khổng lồ bằng cách in tiền",
+          "Sự gia tăng đột ngột của thuế tiêu thụ",
+          "Hoạt động đầu cơ vàng của người dân",
+          "Chính sách neo tỷ giá hối đoái cố định"
+        ],
+        correct: 0,
+        explain: "Mọi cuộc siêu lạm phát (như ở Đức 1923, Zimbabwe 2008) đều do chính phủ in tiền ồ ạt để bù đắp thâm hụt ngân sách mất kiểm soát."
+      },
+      {
+        id: 148, ch: 9,
+        source: "120 Câu LT - Câu 42",
+        text: "Điểm KHÁC BIỆT giữa lạm phát do cầu kéo và lạm phát do chi phí đẩy là:",
+        options: [
+          "Lạm phát cầu kéo ban đầu làm sản lượng tăng và thất nghiệp giảm; còn lạm phát chi phí đẩy làm sản lượng giảm và thất nghiệp tăng",
+          "Đều không có sự tham gia của NHTW",
+          "Lạm phát chi phí đẩy không làm giá cả tăng",
+          "Lạm phát cầu kéo do công đoàn đòi tăng lương"
+        ],
+        correct: 0,
+        explain: "Cầu kéo (AD dịch phải): Sản lượng Y tăng, thất nghiệp giảm; Chi phí đẩy (AS dịch trái): Sản lượng Y giảm, thất nghiệp tăng (đình lạm - stagflation)."
+      },
+      {
+        id: 149, ch: 9,
+        source: "120 Câu LT - Câu 49",
+        text: "Các nghiên cứu thực nghiệm vĩ mô chỉ ra rằng những quốc gia duy trì được tỷ lệ lạm phát thấp và ổn định thường có:",
+        options: [
+          "Ngân hàng Trung ương duy trì mức độ độc lập cao đối với Chính phủ",
+          "Thâm hụt ngân sách được tài trợ bằng in tiền",
+          "Chính sách tiền tệ chịu sự chi phối hoàn toàn của quốc hội",
+          "Chính sách lãi suất luôn luôn bằng 0"
+        ],
+        correct: 0,
+        explain: "Tính độc lập của NHTW ngăn cản áp lực từ chính phủ ép in tiền tài trợ chi tiêu công, nhờ đó duy trì kỷ luật tiền tệ và kiềm chế lạm phát hiệu quả."
+      },
+      {
+        id: 150, ch: 9,
+        source: "120 Câu LT - Câu 57",
+        text: "Hiện tượng 'Thiểu phát' (Disinflation) trong kinh tế học là:",
+        options: [
+          "Hiện tượng tỷ lệ lạm phát ở mức dương nhưng có xu hướng giảm dần qua các thời kỳ",
+          "Hiện tượng mức giá chung giảm tuyệt đối (lạm phát âm)",
+          "Hiện tượng siêu lạm phát",
+          "Sự sụt giảm của cung tiền"
+        ],
+        correct: 0,
+        explain: "Thiểu phát là sự suy giảm của tốc độ lạm phát (ví dụ lạm phát giảm từ 8% xuống 4% rồi 2%)."
+      },
+      {
+        id: 151, ch: 9,
+        source: "Đề Thầy Biên 2024 - Câu 8",
+        text: "Chỉ số thị trường chứng khoán tăng mạnh nhờ giá cổ phiếu tăng sẽ kích thích tiêu dùng thông qua:",
+        options: [
+          "Hiệu ứng của cải (Wealth Effect)",
+          "Hiệu ứng thay thế",
+          "Hiệu ứng thu nhập cố định",
+          "Hiệu ứng chiết khấu dòng tiền"
+        ],
+        correct: 0,
+        explain: "Khi giá trị danh mục cổ phiếu tăng, người dân cảm thấy mình giàu có hơn (tăng của cải) nên sẵn sàng gia tăng chi tiêu hàng ngày."
+      },
+      {
+        id: 152, ch: 9,
+        source: "Đề Thầy Biên 2024 - Câu 13",
+        text: "Một trong những động lực thúc đẩy sự tăng trưởng nhanh chóng của các thị trường tài chính quốc tế là:",
+        options: [
+          "Sự gia tăng nhanh chóng của các quỹ tiết kiệm và dòng vốn đầu tư thặng dư ở nước ngoài",
+          "Chi phí giao dịch quốc tế tăng cao",
+          "Sự bế quan tỏa cảng của các quốc gia",
+          "Sự sụp đổ của đồng USD"
+        ],
+        correct: 0,
+        explain: "Sự tích lũy thặng dư tiết kiệm lớn tại nhiều quốc gia cùng quá trình tự do hóa tài chính đã thúc đẩy luồng vốn quốc tế tìm kiếm cơ hội sinh lời toàn cầu."
+      },
+      {
+        id: 153, ch: 9,
+        source: "LMS Cô Linh - Q8",
+        text: "Chu kỳ kinh doanh chính trị (Political Business Cycle) là hiện tượng trước bầu cử các chính trị gia ban hành chính sách ......, và sau bầu cử phải dùng chính sách ......:",
+        options: [
+          "Mở rộng; Thắt chặt để kiểm soát lạm phát",
+          "Thắt chặt; Mở rộng",
+          "Cân bằng; Thâm hụt",
+          "Thắt chặt; Kích thích việc làm"
+        ],
+        correct: 0,
+        explain: "Trước bầu cử: nới lỏng tiền tệ/tài khóa để kích thích việc làm lấy phiếu bầu; Sau bầu cử: hậu quả lạm phát nảy sinh buộc phải thắt chặt chính sách để xử lý."
+      },
+      {
+        id: 154, ch: 9,
+        source: "LMS Cô Linh - Q23",
+        text: "Khi một đợt lạm phát bất ngờ (Unanticipated Inflation) tăng vọt xảy ra, đối tượng nào sau đây được hưởng lợi nhiều nhất?",
+        options: [
+          "Người đi vay với lãi suất danh nghĩa cố định",
+          "Người cho vay với lãi suất danh nghĩa cố định",
+          "Người về hưu sống bằng lương hưu cố định",
+          "Người gửi tiết kiệm ngân hàng"
+        ],
+        correct: 0,
+        explain: "Lạm phát làm suy giảm sức mua của đồng tiền; người đi vay trả nợ bằng những đồng tiền đã bị mất giá nhiều so với thời điểm vay nên là người hưởng lợi."
+      },
+      {
+        id: 155, ch: 9,
+        source: "LMS Cô Linh - Q13",
+        text: "Nếu để nền kinh tế tự điều chỉnh mà không có sự can thiệp của chính sách tiền tệ mở rộng, một cú sốc cung tiêu cực (như giá dầu tăng vọt) sẽ khiến mức giá:",
+        options: [
+          "Tăng lên một lần rồi sau đó dần trở về mức ban đầu khi tiền lương điều chỉnh",
+          "Tăng liên tục mãi mãi",
+          "Giảm ngay lập tức",
+          "Không thay đổi"
+        ],
+        correct: 0,
+        explain: "Cú sốc cung làm giá tăng và thất nghiệp tăng. Thất nghiệp cao làm tiền lương sụt giảm, kéo đường AS dịch chuyển trở lại vị trí cân bằng dài hạn cũ (giá không tăng liên tục)."
+      },
+      {
+        id: 156, ch: 9,
+        source: "Giải SBT - Chương 11 - Câu 70",
+        text: "Đồng Euro (EUR) giảm giá so với Đô la Mỹ (USD) sẽ dẫn đến hệ quả đối với thương mại là:",
+        options: [
+          "Hàng hóa của Châu Âu trở nên rẻ hơn một cách tương đối đối với người Mỹ",
+          "Hàng hóa của Mỹ rẻ hơn đối với người Châu Âu",
+          "Làm giảm xuất khẩu của Châu Âu sang Mỹ",
+          "Không ảnh hưởng gì đến giá hàng hóa"
+        ],
+        correct: 0,
+        explain: "Khi đồng EUR mất giá, 1 USD đổi được nhiều EUR hơn, khiến giá hàng hóa Châu Âu quy đổi ra USD trở nên rẻ hơn, kích thích xuất khẩu của Châu Âu sang Mỹ."
+      },
+      {
+        id: 157, ch: 9,
+        source: "Giải SBT - Chương 11 - Câu 71",
+        text: "Quy luật một giá (Law of One Price) phát biểu rằng:",
+        options: [
+          "Một loại hàng hóa giống hệt nhau được bán ở các quốc gia khác nhau phải có cùng một mức giá khi quy đổi về cùng một đồng tiền (nếu không có chi phí vận chuyển và rào cản)",
+          "Mọi quốc gia phải dùng chung một loại tiền tệ",
+          "Tỷ giá hối đoái luôn cố định",
+          "Lãi suất các nước luôn bằng nhau"
+        ],
+        correct: 0,
+        explain: "Quy luật một giá khẳng định hàng hóa đồng nhất trong điều kiện thị trường cạnh tranh hoàn hảo và tự do thương mại sẽ có giá ngang nhau sau khi quy đổi theo tỷ giá."
+      },
+      {
+        id: 158, ch: 9,
+        source: "Giải SBT - Chương 12 - Câu 5",
+        text: "Khẳng định kinh điển của nhà kinh tế học đoạt giải Nobel Milton Friedman về lạm phát là:",
+        options: [
+          "'Lạm phát lúc nào và ở đâu cũng là một hiện tượng tiền tệ'",
+          "'Lạm phát là do lòng tham của các nhà tư bản'",
+          "'Lạm phát hoàn toàn do chính sách tài khóa tạo ra'",
+          "'Lạm phát không thể kiểm soát được bằng lãi suất'"
+        ],
+        correct: 0,
+        explain: "Milton Friedman khẳng định lạm phát dai dẳng chỉ có thể duy trì khi cung tiền tăng trưởng liên tục vượt xa tốc độ tăng trưởng sản lượng tiềm năng."
+      },
+      {
+        id: 159, ch: 9,
+        source: "Giải SBT - Chương 12 - Câu 14",
+        text: "Chính phủ không thể một mình tạo ra lạm phát kéo dài qua chính sách tài khóa thắt chặt hay mở rộng vì:",
+        options: [
+          "Chính phủ bị giới hạn bởi nguồn thu ngân sách và hạn mức vay nợ, chỉ có NHTW với khả năng in tiền vô hạn mới duy trì được lạm phát",
+          "Chính phủ không có quyền chi tiêu",
+          "Chính phủ không có quyền thu thuế",
+          "Lạm phát chỉ do người tiêu dùng quyết định"
+        ],
+        correct: 0,
+        explain: "Chi tiêu ngân sách có giới hạn. Muốn có sự tăng giá liên tục trong dài hạn thì phải có sự thỏa hiệp của chính sách tiền tệ bơm thêm tiền vào lưu thông."
+      },
+      {
+        id: 160, ch: 9,
+        source: "Giải SBT - Chương 12 - Câu 25",
+        text: "Để kiềm chế và dập tắt một đợt lạm phát đang bùng phát, Ngân hàng Trung ương cần triển khai biện pháp nào sau đây?",
+        options: [
+          "Bán trái phiếu chính phủ trên thị trường mở và nâng lãi suất chiết khấu",
+          "Hạ lãi suất chiết khấu xuống 0%",
+          "Giảm tỷ lệ dự trữ bắt buộc",
+          "Mua vào ngoại tệ với khối lượng lớn"
+        ],
+        correct: 0,
+        explain: "Bán chứng khoán trên OMO và tăng lãi suất chiết khấu là các biện pháp thắt chặt tiền tệ hữu hiệu để hút tiền về, giảm tổng cầu và kiềm chế lạm phát."
+      }
+    ];
+
+    /* ==========================================================================
+       2. APPLICATION STATE
+       ========================================================================== */
+    const STORAGE_KEY = 'NEU_FINMONEY_TESTBANK_MASTER_V2';
+
+    let appState = {
+      mode: 'all', // 'all', 'random', 'mistakes', 'bookmarked', 'exam'
+      selectedChapter: 'all',
+      searchQuery: '',
+      currentIndex: 0,
+      activeQuestions: [],
+      userAnswers: {},  // { [id]: chosenOptionIndex }
+      mistakes: [],     // [id, id, ...]
+      bookmarks: [],    // [id, id, ...]
+      streak: 0,
+      exam: {
+        isActive: false,
+        timerInterval: null,
+        totalSeconds: 30 * 60,
+        remainingSeconds: 30 * 60,
+        questions: [],
+        submitted: false
+      }
+    };
+
+    function loadSavedState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState.userAnswers = parsed.userAnswers || {};
+          appState.mistakes = parsed.mistakes || [];
+          appState.bookmarks = parsed.bookmarks || [];
+          appState.streak = parsed.streak || 0;
+        }
+      } catch (e) {
+        console.warn('Storage read error:', e);
+      }
+    }
+
+    function persistState() {
+      try {
+        const payload = {
+          userAnswers: appState.userAnswers,
+          mistakes: appState.mistakes,
+          bookmarks: appState.bookmarks,
+          streak: appState.streak
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (e) {
+        console.warn('Storage write error:', e);
+      }
+    }
+
+    /* ==========================================================================
+       3. FILTERING & ACTIVE QUESTION SET
+       ========================================================================== */
+    function rebuildActiveQuestions() {
+      let pool = [...masterBank];
+
+      // 1. Filter by Mode
+      if (appState.mode === 'random') {
+        pool = shuffleArray([...pool]);
+      } else if (appState.mode === 'mistakes') {
+        const set = new Set(appState.mistakes);
+        pool = pool.filter(q => set.has(q.id));
+      } else if (appState.mode === 'bookmarked') {
+        const set = new Set(appState.bookmarks);
+        pool = pool.filter(q => set.has(q.id));
+      } else if (appState.mode === 'exam') {
+        appState.activeQuestions = appState.exam.questions;
+        updateBadgeNumbers();
+        return;
+      }
+
+      // 2. Filter by Chapter
+      if (appState.selectedChapter !== 'all') {
+        const chNum = parseInt(appState.selectedChapter);
+        pool = pool.filter(q => q.ch === chNum);
+      }
+
+      // 3. Filter by Search Query
+      if (appState.searchQuery.trim() !== '') {
+        const q = appState.searchQuery.toLowerCase().trim();
+        pool = pool.filter(item => 
+          item.text.toLowerCase().includes(q) || 
+          item.explain.toLowerCase().includes(q) ||
+          item.source.toLowerCase().includes(q) ||
+          item.options.some(opt => opt.toLowerCase().includes(q))
+        );
+      }
+
+      appState.activeQuestions = pool;
+      if (appState.currentIndex >= pool.length) {
+        appState.currentIndex = Math.max(0, pool.length - 1);
+      }
+      updateBadgeNumbers();
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    /* ==========================================================================
+       4. UI RENDERING
+       ========================================================================== */
+    const questionTextEl = document.getElementById('questionText');
+    const optionsContainerEl = document.getElementById('optionsContainer');
+    const explanationBoxEl = document.getElementById('explanationBox');
+    const explanationTextEl = document.getElementById('explanationText');
+    const chapterBadgeEl = document.getElementById('questionChapterBadge');
+    const sourceBadgeEl = document.getElementById('questionSourceBadge');
+    const toggleBookmarkBtn = document.getElementById('toggleBookmarkBtn');
+    const jumpInputEl = document.getElementById('jumpInput');
+    const totalQuestionCountEl = document.getElementById('totalQuestionCount');
+    const filteredCountTextEl = document.getElementById('filteredCountText');
+
+    function renderActiveQuestion() {
+      const list = appState.activeQuestions;
+
+      if (!list || list.length === 0) {
+        questionTextEl.innerHTML = `
+          <div class="py-14 text-center text-slate-400">
+            <i class="ph-bold ph-tray text-4xl mb-3 block text-slate-300"></i>
+            <p class="font-bold text-slate-700 text-sm">Không tìm thấy câu hỏi phù hợp!</p>
+            <p class="text-xs mt-1 text-slate-400">Vui lòng chọn chương khác hoặc xóa từ khóa tìm kiếm.</p>
+          </div>
+        `;
+        optionsContainerEl.innerHTML = '';
+        explanationBoxEl.classList.add('hidden');
+        chapterBadgeEl.textContent = 'Trống';
+        sourceBadgeEl.textContent = '0 / 0';
+        jumpInputEl.value = 0;
+        totalQuestionCountEl.textContent = 0;
+        filteredCountTextEl.textContent = 0;
+        renderMatrix();
+        refreshStats();
+        return;
+      }
+
+      const currentQ = list[appState.currentIndex];
+      const isExamActive = appState.mode === 'exam' && !appState.exam.submitted;
+      const userChoice = appState.userAnswers[currentQ.id];
+      const hasChosen = userChoice !== undefined;
+
+      // Update Badges
+      chapterBadgeEl.textContent = `Chương ${currentQ.ch}`;
+      sourceBadgeEl.textContent = `Câu ${appState.currentIndex + 1} / ${list.length} • ${currentQ.source}`;
+      totalQuestionCountEl.textContent = list.length;
+      filteredCountTextEl.textContent = list.length;
+      jumpInputEl.value = appState.currentIndex + 1;
+
+      // Update Question text
+      questionTextEl.textContent = currentQ.text;
+
+      // Update Bookmark UI
+      const isBookmarked = appState.bookmarks.includes(currentQ.id);
+      const icon = toggleBookmarkBtn.querySelector('.bookmark-icon');
+      if (isBookmarked) {
+        icon.className = 'ph-fill ph-star text-amber-500 text-sm bookmark-icon';
+        toggleBookmarkBtn.classList.add('border-amber-400', 'bg-amber-50');
+      } else {
+        icon.className = 'ph-bold ph-star text-slate-400 text-sm bookmark-icon';
+        toggleBookmarkBtn.classList.remove('border-amber-400', 'bg-amber-50');
+      }
+
+      // Render Options
+      optionsContainerEl.innerHTML = '';
+      const letters = ['A', 'B', 'C', 'D'];
+
+      currentQ.options.forEach((optText, optIdx) => {
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left p-3.5 sm:p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all flex items-start space-x-3 `;
+
+        let style = "border-slate-200 hover:border-brand-400 hover:bg-slate-50 text-slate-700 bg-white shadow-sm";
+        let letterBadge = "bg-slate-100 text-slate-600 border border-slate-200";
+
+        if (hasChosen) {
+          if (isExamActive) {
+            // During unsubmitted exam: only highlight current choice neutrally
+            if (userChoice === optIdx) {
+              style = "border-brand-500 bg-brand-50 text-brand-900 ring-2 ring-brand-400/40 font-semibold";
+              letterBadge = "bg-brand-600 text-white";
+            }
+          } else {
+            // Practice or Reviewed Exam: Instant Right/Wrong Feedback
+            if (optIdx === currentQ.correct) {
+              // The right answer
+              style = "border-emerald-500 bg-emerald-50/90 text-emerald-950 ring-2 ring-emerald-400/30 font-semibold";
+              letterBadge = "bg-emerald-600 text-white shadow-sm";
+            } else if (userChoice === optIdx && userChoice !== currentQ.correct) {
+              // The wrong choice selected
+              style = "border-rose-400 bg-rose-50/80 text-rose-950 font-semibold";
+              letterBadge = "bg-rose-500 text-white";
+            } else {
+              // Other unselected choices
+              style = "border-slate-200 text-slate-400 opacity-60 bg-white";
+            }
+          }
+        }
+
+        btn.className += style;
+        btn.innerHTML = `
+          <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${letterBadge}">
+            ${letters[optIdx]}
+          </span>
+          <span class="flex-1 leading-snug">${optText}</span>
+        `;
+
+        btn.onclick = () => selectOption(currentQ.id, optIdx);
+        optionsContainerEl.appendChild(btn);
+      });
+
+      // Show/Hide Explanation
+      if (hasChosen && !isExamActive) {
+        explanationBoxEl.classList.remove('hidden');
+        explanationTextEl.innerHTML = currentQ.explain;
+      } else {
+        explanationBoxEl.classList.add('hidden');
+      }
+
+      renderMatrix();
+      refreshStats();
+    }
+
+    function selectOption(qId, choiceIdx) {
+      const q = masterBank.find(item => item.id === qId);
+      if (!q) return;
+
+      const isExamActive = appState.mode === 'exam' && !appState.exam.submitted;
+
+      // In practice mode, lock once answered
+      if (!isExamActive && appState.userAnswers[qId] !== undefined) {
+        return;
+      }
+
+      appState.userAnswers[qId] = choiceIdx;
+
+      if (!isExamActive) {
+        const isRight = (choiceIdx === q.correct);
+        if (isRight) {
+          appState.streak += 1;
+          // If in mistakes list, remove it
+          const mIdx = appState.mistakes.indexOf(qId);
+          if (mIdx !== -1) {
+            appState.mistakes.splice(mIdx, 1);
+          }
+          if (appState.streak > 0 && appState.streak % 5 === 0) {
+            fireConfetti();
+          }
+        } else {
+          appState.streak = 0;
+          if (!appState.mistakes.includes(qId)) {
+            appState.mistakes.push(qId);
+          }
+        }
+      }
+
+      persistState();
+      renderActiveQuestion();
+    }
+
+    /* ==========================================================================
+       5. QUESTION MATRIX (NAVIGATION PALETTE)
+       ========================================================================== */
+    const questionMatrixEl = document.getElementById('questionMatrix');
+
+    function renderMatrix() {
+      questionMatrixEl.innerHTML = '';
+      const list = appState.activeQuestions;
+      const isExamActive = appState.mode === 'exam' && !appState.exam.submitted;
+
+      list.forEach((q, idx) => {
+        const btn = document.createElement('button');
+        const userChoice = appState.userAnswers[q.id];
+        const isCurrent = (idx === appState.currentIndex);
+        const isStarred = appState.bookmarks.includes(q.id);
+
+        let bg = "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200";
+
+        if (userChoice !== undefined) {
+          if (isExamActive) {
+            bg = "bg-brand-600 text-white border-brand-700";
+          } else {
+            if (userChoice === q.correct) {
+              bg = "bg-emerald-500 text-white border-emerald-600";
+            } else {
+              bg = "bg-rose-500 text-white border-rose-600";
+            }
+          }
+        }
+
+        let ring = isCurrent ? "ring-2 ring-brand-600 ring-offset-2 font-bold shadow-md z-10" : "";
+
+        btn.className = `relative h-8 rounded-lg text-xs font-semibold border flex items-center justify-center transition ${bg} ${ring}`;
+        btn.textContent = idx + 1;
+
+        if (isStarred) {
+          const star = document.createElement('span');
+          star.className = 'absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 border border-white';
+          btn.appendChild(star);
+        }
+
+        btn.onclick = () => {
+          appState.currentIndex = idx;
+          renderActiveQuestion();
+        };
+
+        questionMatrixEl.appendChild(btn);
+      });
+    }
+
+    /* ==========================================================================
+       6. STATS & INDICATORS
+       ========================================================================== */
+    function refreshStats() {
+      const list = appState.activeQuestions;
+      let correct = 0;
+      let wrong = 0;
+      let answered = 0;
+
+      list.forEach(q => {
+        const c = appState.userAnswers[q.id];
+        if (c !== undefined) {
+          answered++;
+          if (c === q.correct) correct++;
+          else wrong++;
+        }
+      });
+
+      const total = list.length;
+      const unanswered = Math.max(0, total - answered);
+      const accRate = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+      const compRate = total > 0 ? Math.round((answered / total) * 100) : 0;
+
+      document.getElementById('streakCount').textContent = appState.streak;
+      document.getElementById('accuracyRate').textContent = `${accRate}%`;
+      document.getElementById('completionPercent').textContent = `${compRate}%`;
+      document.getElementById('progressBar').style.width = `${compRate}%`;
+
+      document.getElementById('legendCorrect').textContent = correct;
+      document.getElementById('legendWrong').textContent = wrong;
+      document.getElementById('legendUnanswered').textContent = unanswered;
+      document.getElementById('legendStarred').textContent = appState.bookmarks.length;
+      document.getElementById('matrixCounterBadge').textContent = `${answered}/${total}`;
+    }
+
+    function updateBadgeNumbers() {
+      const mistakeBadge = document.getElementById('mistakeBadge');
+      const bookmarkBadge = document.getElementById('bookmarkBadge');
+
+      if (appState.mistakes.length > 0) {
+        mistakeBadge.textContent = appState.mistakes.length;
+        mistakeBadge.classList.remove('hidden');
+      } else {
+        mistakeBadge.classList.add('hidden');
+      }
+
+      if (appState.bookmarks.length > 0) {
+        bookmarkBadge.textContent = appState.bookmarks.length;
+        bookmarkBadge.classList.remove('hidden');
+      } else {
+        bookmarkBadge.classList.add('hidden');
+      }
+    }
+
+    /* ==========================================================================
+       7. TIMED EXAM ENGINE
+       ========================================================================== */
+    const examHeaderBanner = document.getElementById('examHeaderBanner');
+    const examTimerEl = document.getElementById('examTimer');
+    const finishExamBtn = document.getElementById('finishExamBtn');
+    const examResultModal = document.getElementById('examResultModal');
+
+    function launchExam() {
+      // Pick 35 random questions across the 160-item bank
+      const randomSet = shuffleArray([...masterBank]).slice(0, 35);
+
+      appState.exam.isActive = true;
+      appState.exam.submitted = false;
+      appState.exam.questions = randomSet;
+      appState.exam.remainingSeconds = 30 * 60;
+      appState.currentIndex = 0;
+
+      // Clear previous choices for exam questions
+      randomSet.forEach(q => {
+        delete appState.userAnswers[q.id];
+      });
+
+      document.getElementById('filterToolbar').classList.add('hidden');
+      examHeaderBanner.classList.remove('hidden');
+
+      clearInterval(appState.exam.timerInterval);
+      updateClockUI();
+
+      appState.exam.timerInterval = setInterval(() => {
+        appState.exam.remainingSeconds--;
+        updateClockUI();
+        if (appState.exam.remainingSeconds <= 0) {
+          clearInterval(appState.exam.timerInterval);
+          submitExam();
+        }
+      }, 1000);
+
+      rebuildActiveQuestions();
+      renderActiveQuestion();
+    }
+
+    function updateClockUI() {
+      const m = Math.floor(appState.exam.remainingSeconds / 60);
+      const s = appState.exam.remainingSeconds % 60;
+      examTimerEl.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      if (m < 5) {
+        examTimerEl.classList.add('text-rose-400');
+      } else {
+        examTimerEl.classList.remove('text-rose-400');
+      }
+    }
+
+    function submitExam() {
+      clearInterval(appState.exam.timerInterval);
+      appState.exam.submitted = true;
+
+      let scoreCount = 0;
+      appState.exam.questions.forEach(q => {
+        if (appState.userAnswers[q.id] === q.correct) {
+          scoreCount++;
+        } else {
+          if (!appState.mistakes.includes(q.id)) {
+            appState.mistakes.push(q.id);
+          }
+        }
+      });
+
+      const total = appState.exam.questions.length;
+      const scoreScale10 = ((scoreCount / total) * 10).toFixed(1);
+      const usedSecs = (30 * 60) - appState.exam.remainingSeconds;
+      const mins = Math.floor(usedSecs / 60);
+      const secs = usedSecs % 60;
+
+      document.getElementById('finalScoreText').textContent = `${scoreScale10} / 10`;
+      document.getElementById('finalScoreDetails').textContent = `Đúng ${scoreCount} trên tổng số ${total} câu hỏi`;
+      document.getElementById('examTimeSpent').textContent = `${mins} phút ${secs} giây`;
+
+      let rank = "Trung bình";
+      let rankColor = "text-amber-500";
+      if (scoreScale10 >= 9.0) {
+        rank = "Xuất Sắc (A+)";
+        rankColor = "text-emerald-600";
+        fireConfetti();
+      } else if (scoreScale10 >= 8.0) {
+        rank = "Giỏi (A)";
+        rankColor = "text-emerald-500";
+        fireConfetti();
+      } else if (scoreScale10 >= 7.0) {
+        rank = "Khá (B)";
+        rankColor = "text-brand-600";
+      }
+
+      const rankEl = document.getElementById('examRankTier');
+      rankEl.textContent = rank;
+      rankEl.className = `font-bold ${rankColor}`;
+
+      // Show Result Modal
+      examResultModal.classList.remove('hidden');
+      setTimeout(() => examResultModal.classList.remove('opacity-0'), 10);
+
+      // Hide Exam Banner, Show Toolbar
+      examHeaderBanner.classList.add('hidden');
+      document.getElementById('filterToolbar').classList.remove('hidden');
+
+      persistState();
+      renderActiveQuestion();
+    }
+
+    /* ==========================================================================
+       8. EVENT LISTENERS
+       ========================================================================== */
+    // Next / Prev Buttons
+    document.getElementById('prevQuestionBtn').onclick = () => {
+      if (appState.currentIndex > 0) {
+        appState.currentIndex--;
+        renderActiveQuestion();
+      }
+    };
+
+    document.getElementById('nextQuestionBtn').onclick = () => {
+      if (appState.currentIndex < appState.activeQuestions.length - 1) {
+        appState.currentIndex++;
+        renderActiveQuestion();
+      }
+    };
+
+    // Jump Input
+    jumpInputEl.addEventListener('change', (e) => {
+      const val = parseInt(e.target.value);
+      if (!isNaN(val) && val >= 1 && val <= appState.activeQuestions.length) {
+        appState.currentIndex = val - 1;
+        renderActiveQuestion();
+      } else {
+        e.target.value = appState.currentIndex + 1;
+      }
+    });
+
+    // Star/Bookmark Toggle
+    toggleBookmarkBtn.onclick = () => {
+      const q = appState.activeQuestions[appState.currentIndex];
+      if (!q) return;
+
+      const idx = appState.bookmarks.indexOf(q.id);
+      if (idx !== -1) {
+        appState.bookmarks.splice(idx, 1);
+      } else {
+        appState.bookmarks.push(q.id);
+      }
+      persistState();
+      renderActiveQuestion();
+    };
+
+    // Mode Selector Buttons
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.onclick = () => {
+        const mode = btn.dataset.mode;
+        if (mode === appState.mode && mode !== 'exam') return;
+
+        document.querySelectorAll('.mode-btn').forEach(b => {
+          b.className = "mode-btn px-3 py-1.5 rounded-xl flex items-center space-x-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-white/60 transition";
+        });
+        btn.className = "mode-btn px-3 py-1.5 rounded-xl flex items-center space-x-1.5 whitespace-nowrap bg-white text-brand-700 shadow-sm border border-slate-200 transition font-bold";
+
+        appState.mode = mode;
+        appState.currentIndex = 0;
+
+        if (mode === 'exam') {
+          launchExam();
+        } else {
+          clearInterval(appState.exam.timerInterval);
+          examHeaderBanner.classList.add('hidden');
+          document.getElementById('filterToolbar').classList.remove('hidden');
+          rebuildActiveQuestions();
+          renderActiveQuestion();
+        }
+      };
+    });
+
+    // Chapter Dropdown Filter
+    document.getElementById('chapterFilter').addEventListener('change', (e) => {
+      appState.selectedChapter = e.target.value;
+      appState.currentIndex = 0;
+      rebuildActiveQuestions();
+      renderActiveQuestion();
+    });
+
+    // Search Input
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', (e) => {
+      appState.searchQuery = e.target.value;
+      if (e.target.value.trim() !== '') {
+        clearSearchBtn.classList.remove('hidden');
+      } else {
+        clearSearchBtn.classList.add('hidden');
+      }
+      appState.currentIndex = 0;
+      rebuildActiveQuestions();
+      renderActiveQuestion();
+    });
+
+    clearSearchBtn.onclick = () => {
+      searchInput.value = '';
+      appState.searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      appState.currentIndex = 0;
+      rebuildActiveQuestions();
+      renderActiveQuestion();
+    };
+
+    // Finish Exam Click
+    finishExamBtn.onclick = () => submitExam();
+
+    // Modal Action Buttons
+    document.getElementById('reviewExamBtn').onclick = () => {
+      examResultModal.classList.add('hidden');
+      appState.currentIndex = 0;
+      renderActiveQuestion();
+    };
+
+    document.getElementById('closeExamModalBtn').onclick = () => {
+      examResultModal.classList.add('hidden');
+    };
+
+    // Custom Reset Confirmation Modal
+    const confirmResetModal = document.getElementById('confirmResetModal');
+    document.getElementById('resetDataBtn').onclick = () => {
+      confirmResetModal.classList.remove('hidden');
+    };
+
+    document.getElementById('cancelResetBtn').onclick = () => {
+      confirmResetModal.classList.add('hidden');
+    };
+
+    document.getElementById('confirmResetBtn').onclick = () => {
+      appState.userAnswers = {};
+      appState.mistakes = [];
+      appState.streak = 0;
+      persistState();
+      confirmResetModal.classList.add('hidden');
+      rebuildActiveQuestions();
+      renderActiveQuestion();
+    };
+
+    // Arrow Key Navigation
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        document.getElementById('nextQuestionBtn').click();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        document.getElementById('prevQuestionBtn').click();
+      }
+    });
+
+    // Micro Confetti
+    function fireConfetti() {
+      try {
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.8 }
+        });
+      } catch (err) {}
+    }
+
+    // App Startup
+    window.onload = () => {
+      loadSavedState();
+      rebuildActiveQuestions();
+      renderActiveQuestion();
+    };
+  </script>
+</body>
+</html>
